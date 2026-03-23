@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tableau de bord</title>
+  <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.12.0/css/all.css">
+  <link rel="icon" type="image/x-icon" href="./VMM.ico">
+  <style>
+    /* Styles généraux */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f9f9f9;
+    }
+
+    /* Navbar Styles */
+    .modern-navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      background-color: #2c3e50;
+      color: white;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      flex-wrap: wrap; /* Permettre le passage à la ligne pour les petits écrans */
+    }
+
+    .modern-navbar .logo {
+      font-size: 1.5em;
+      font-weight: bold;
+      flex: 1 1 auto;
+    }
+
+    .modern-navbar .nav-links {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap; /* Empiler les liens sur les petits écrans */
+      gap: 10px;
+      justify-content: flex-end; /* Aligner les liens à droite */
+      flex: 1 1 auto;
+    }
+
+    .modern-navbar .nav-links li {
+      display: inline;
+    }
+
+    .modern-navbar .nav-links a {
+      text-decoration: none;
+      font-weight: bold;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 15px;
+      background-color: #364b61;
+      transition: background-color 0.3s ease;
+      text-align: center;
+    }
+
+    .modern-navbar .nav-links a:hover {
+      background-color: #2c3e50;
+    }
+
+    #logout {
+      background-color: #991818;
+    }
+
+    #logout:hover {
+      background-color: #bb2121;
+    }
+
+    /* Welcome Section */
+    .welcome {
+      text-align: center;
+      padding: 20px;
+      background-color: #ecf0f1;
+      border-bottom: 1px solid #dcdcdc;
+    }
+
+    .welcome h1 {
+      margin: 0;
+      font-size: 2em;
+      color: #2c3e50;
+    }
+
+    /* Container Styles */
+    .container {
+      display: flex;
+      gap: 150px;
+      padding: 20px;
+    }
+
+    .column1 {
+      width: 340px;
+      padding-left: 20px;
+      padding-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      border-radius: 25px;
+      background-color: #e7e7e7;
+      border: 0.01px solid rgba(0, 0, 0, 0.2);
+    }
+
+    .column1 h1 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .column2 {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .column2 h1 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .templategap {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .othervms {
+      display : flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .card {
+      position: relative;
+      width: 300px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      background-color: white;
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .card a {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      padding: 20px;
+    }
+
+    .card p {
+      margin: 0;
+    }
+
+    .card .small {
+      font-size: 0.9em;
+      color: black;
+      font-weight: bold;
+    }
+
+    #vmName {
+      text-align: center;
+    }
+
+    #vmState {
+      margin-bottom: 5px;
+      margin-left: 15px;
+    }
+
+    #vmCharacteristics {
+      margin-left: 15px;
+    }
+
+    .characteristics {
+      display: grid;
+      grid-template-columns: auto auto; /* Deux colonnes pour aligner les éléments */
+      column-gap: 5px; /* Espacement horizontal entre les colonnes */
+      row-gap: 5px; /* Espacement vertical entre les lignes */
+      font-size: 0.9em; /* Ajuster la taille si nécessaire */
+      line-height: 1.2; /* Espacement entre les lignes pour améliorer la lisibilité */
+    }
+
+    .characteristics div {
+      display: flex;
+      justify-content: flex-start; /* Ajuste l'espacement entre le label et la valeur */
+      gap: 2px;
+      font-weight: bold;
+    }
+
+    .tag {
+      background:#328bd4;
+      border: none;
+      border-radius: 15px;
+      padding: 0 5px 2px 5px;
+      color: rgb(231, 231, 231);
+    }
+
+    .tag.template {
+      background: #8e44ad; /* Couleur violette */
+      color: white; /* Texte en blanc pour un bon contraste */
+    }
+
+    .actions {
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between; /* Crée un espacement uniforme entre les éléments */
+      align-items: center; /* Aligne les éléments verticalement */
+    }
+
+    .button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 5px;
+      width: 50px; /* Largeur fixe */
+      height: 50px; /* Hauteur fixe */
+      display: flex;
+      justify-content: center;
+      align-items: center; /* Centrage de l'image */
+      border-radius: 50%; /* Boutons ronds */
+      margin-bottom: 5px;
+    }
+
+    .button img {
+      width: 80%; /* Ajuster la taille de l'image */
+      height: 80%; /* Ajuster la taille de l'image */
+      object-fit: contain;
+    }
+
+    .button img:hover {
+      transform: scale(1.1);
+    }
+
+    .button1 {
+      background-color: rgb(12, 160, 12);
+      border-radius: 50%;
+      margin-left: 60px;
+    }
+
+    .button2 {
+      background-color: rgb(56, 56, 56);
+      border-radius: 50%;
+    }
+
+    .button3 {
+      width: 12px;
+      height: 12px;
+      background-color: #204972;
+      border-radius: 50%;
+      margin-right: 70px;
+      margin-bottom: 5px;
+    }
+
+    .button3 img {
+      width: 35px;
+      height: 35px;
+      transform: translate(-11px, -11px);
+    }
+
+    .button3 img:hover {
+      width: 40px;
+      height: 40px;
+      transform: translate(-13px, -13px);
+    }
+
+    /* Responsive Styles */
+    @media (max-width: 885px) {
+      .modern-navbar {
+        flex-direction: column; /* Empiler les éléments */
+        align-items: flex-start;
+      }
+
+      .modern-navbar .nav-links {
+        justify-content: flex-start;
+        margin-top: 15px;
+      }
+
+      .modern-navbar .nav-links li {
+        margin-bottom: 15px;
+      }
+
+      .modern-navbar .nav-links a {
+        width: 100%; /* Chaque lien prend toute la largeur disponible */
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Vérification du token -->
+  <script>
+    if (!sessionStorage.getItem('token')) {
+      window.location.href = '/';
+    }
+  </script>
+
+  <nav class="modern-navbar">
+    <img src="./img/VMM.png" alt="VMM" style="width: 50px; margin-right: 5px;">
+    <div class="logo">Virtual Machines Manager</div>
+    <ul class="nav-links">
+      <li><a href="">Accueil</a></li>
+      <li><a href="https://www.canva.com/design/DAGdy8ez_i0/8oSJ8xHat-2Lvol-OGj4XQ/view?utm_content=DAGdy8ez_i0&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hd46a505919#1" target="_blank">Tuto</a></li>
+      <li><a href="/clone-vm">Cloner VM</a></li>
+      <li><a href="/new-vm">Nouvelle VM</a></li>
+      <li><a href="/del-vm">Supprimer VM</a></li>
+      <li><a href="#" id="logout">Se déconnecter</a></li>
+    </ul>
+  </nav>
+
+  <div class="welcome">
+    <h1 id="welcome-user">Bienvenue dans votre tableau de bord</h1>
+  </div>
+
+  <div class="container">
+    <div class="column1">
+      <h1>Templates</h1>
+      <div id="templateColumn" class="templategap"></div>
+    </div>
+    <div class="column2">
+      <h1>VMs</h1>
+      <div id="otherVmsColumn" class="othervms"></div>
+    </div>
+  </div>
+
+  <script>
+    async function fetchVMs() {
+      // Fonction pour récupérer les cookies
+      function getCookie(name) {
+          const value = `; ${document.cookie}`;
+          const parts = value.split(`; ${name}=`);
+          if (parts.length === 2) return parts.pop().split(';').shift();
+          return null;
+      }
+
+      let username, password;
+
+      try {
+        const userCredentials = getCookie('userCredentials');
+        if (!userCredentials) throw new Error('Cookie userCredentials introuvable');
+
+        const decodedUrl = decodeURIComponent(userCredentials);
+         const decodedCredentials = atob(decodedUrl);
+        [username, password] = decodedCredentials.split(':');
+
+        if (!username || !password) throw new Error('Identifiant ou mot de passe manquant');
+      } catch (error) {
+        console.error('Erreur lors du décodage du cookie userCredentials :', error);
+        alert('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.');
+        window.location.href = '/login';
+        return;
+      }
+
+      async function fetchPerms() {
+        try {
+
+          // Récupérer les permissions de l'utilisateur
+          const response = await fetch(`/permissions?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`);
+          if (!response.ok) throw new Error('Erreur lors de la récupération des permissions.');
+
+          const permissions = await response.json();
+
+          // Fonction pour vérifier si "VM.Clone" existe dans n'importe quelle section
+          function hasVmClone(permissionsData) {
+            if (!permissionsData) {
+              return false;
+            }
+
+            const vmsSection = permissionsData['/vms'];
+
+            if (vmsSection && vmsSection['VM.Clone'] === 1) {
+              return true;
+            }
+            return false;
+          }
+
+          function hasVmCreationDeletion(permissionsData) {
+            if (!permissionsData) {
+              console.log("Les permissions sont nulles ou non définies.");
+              return false;
+            }
+
+            const permissionsToCheck = [
+              "VM.Allocate",
+              "VM.Config.CDROM",
+              "VM.Config.CPU",
+              "VM.Config.Cloudinit",
+              "VM.Config.Disk",
+              "VM.Config.HWType",
+              "VM.Config.Memory",
+              "VM.Config.Network",
+              "VM.Config.Options",
+            ];
+
+            const vmsSection = permissionsData["/vms"];
+
+            if (vmsSection) {
+              // Vérifier si la section `/vms` contient toutes les permissions requises
+              const allPermissionsExist = permissionsToCheck.every(
+                (permission) => vmsSection[permission] === 1
+              );
+
+              if (allPermissionsExist) {
+                return true; // Retourner true si toutes les permissions sont présentes dans `/vms`
+              }
+            }
+
+            return false; // Retourner false si `/vms` est absent ou ne contient pas toutes les permissions
+          }
+
+          const userHasVmClone = hasVmClone(permissions);
+          const userHasVmCreationDeletion = hasVmCreationDeletion(permissions);
+
+          // Si l'utilisateur n'a pas la permission "/", cacher certains éléments
+          if (!permissions) {
+          // Cacher les liens
+            document.querySelector('a[href="/clone-vm"]').style.display = 'none';
+            document.querySelector('a[href="/new-vm"]').style.display = 'none';
+            document.querySelector('a[href="/del-vm"]').style.display = 'none';
+
+            // Cacher la colonne Templates
+            const column1 = document.querySelector('.column1');
+            if (column1) {
+              column1.style.display = 'none';
+            }
+          }
+
+          if (!userHasVmClone) {
+            document.querySelector('a[href="/clone-vm"]').style.display = 'none';
+          
+            // Cacher la colonne Templates
+            const column1 = document.querySelector('.column1');
+            if (column1) {
+              column1.style.display = 'none';
+            }
+          }
+
+          if (!userHasVmCreationDeletion) {
+            document.querySelector('a[href="/new-vm"]').style.display = 'none';
+            document.querySelector('a[href="/del-vm"]').style.display = 'none';
+          }
+        } catch (error) {
+          console.error('Erreur lors de la vérification des permissions :', error);
+          alert('Impossible de vérifier les permissions de l\'utilisateur. Veuillez réessayer.');
+        }
+      }
+
+      fetchPerms();
+
+      try {
+        // Construire la requête avec les identifiants de l'utilisateur
+        const response = await fetch(`/vms?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`, {
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error(`Erreur HTTP ${response.status} : ${response.statusText}`);
+        }
+
+        const vms = await response.json();
+
+        const templateColumn = document.getElementById('templateColumn');
+        const otherVmsColumn = document.getElementById('otherVmsColumn');
+
+        templateColumn.innerHTML = '';
+        otherVmsColumn.innerHTML = '';
+
+        vms.forEach(vm => {
+          const card = document.createElement('div');
+          card.classList.add('card');
+
+          const isTemplate = Array.isArray(vm.diskNames) &&
+                            vm.diskNames.some(name => typeof name === 'string' && name.startsWith('base-'));
+
+          const tagsHTML = vm.tags
+            ? vm.tags
+                .split(';')
+                .map(tag => `<strong class="tag ${isTemplate ? 'template' : ''}">${tag.trim()}</strong>`)
+                .join(' ')
+            : '';
+
+          const stateHTML = isTemplate
+            ? '' // Pas d'état pour les templates
+            : `
+              <p id="vmState" class="state">
+                <strong>État : <span style="color: ${vm.status === 'running' ? 'green' : 'red'};">
+                  ${vm.status === 'running' ? 'Démarrée' : 'Arrêtée'}
+                </span></strong>
+              </p>
+            `;
+
+          const actionsHTML = isTemplate
+            ? '' // Pas d'actions pour les templates
+            : `
+              <div class="actions">
+                <button class="button button1" onclick="startVM(${vm.vmid})">
+                  <img src="./img/start.png" alt="Démarrer">
+                </button>
+                <button class="button button2" onclick="stopVM(${vm.vmid})">
+                  <img src="./img/stop.png" alt="Arrêter">
+                </button>
+                <a target="_blank" href="https://192.168.1.42:8006/?console=kvm&novnc=1&vmid=${vm.vmid}&vmname=${vm.name}&node=FlavProx&resize=off&cmd=" class="button3">
+                  <img src="./img/screen.png" alt="écran">
+                </a>
+              </div>
+            `;
+
+          card.innerHTML = `
+            <div>
+              <p id="vmName"><strong>${vm.name}</strong> ${tagsHTML}</p>
+              <br>
+              ${stateHTML}
+              <div id="vmCharacteristics" class="characteristics">
+                <div>
+                  <strong>VMID:</strong> <span style="color:#328bd4">${vm.vmid}</span>
+                </div>
+                <div>
+                  <strong>CPU:</strong> <span style="color:#328bd4;">${vm.maxcpu} coeurs</span>
+                </div>
+                <div>
+                  <strong>Memory:</strong> <span style="color:#328bd4">${vm.maxmem} GB</span>
+                </div>
+                <div>
+                  <strong>Disk:</strong> <span style="color:#328bd4">${vm.maxdisk} GB</span>
+                </div>
+              </div>
+              ${actionsHTML}
+            </div>
+          `;
+
+          if (
+            Array.isArray(vm.diskNames) &&
+            vm.diskNames.some(name => typeof name === 'string' && name.startsWith('base-'))
+          ) {
+            templateColumn.appendChild(card);
+          } else {
+            otherVmsColumn.appendChild(card);
+          }
+        });
+      } catch (error) {
+          console.error('Erreur lors de la récupération des VMs :', error);
+          alert("Une erreur est survenue lors de la récupération des machines virtuelles. Veuillez réessayer.");
+      }
+    }
+
+    // Rafraîchir automatiquement les statuts des VM toutes les 5 secondes
+    setInterval(fetchVMs, 5000);
+
+    // Fonction pour récupérer les cookies
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+      return null;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      let username;
+
+      try {
+        // Récupérer le cookie contenant les identifiants
+        const userCredentials = getCookie('userCredentials');
+
+        if (!userCredentials) {
+          throw new Error('Cookie userCredentials introuvable');
+        }
+
+        // Décoder le cookie
+        const decodedUrl = decodeURIComponent(userCredentials);
+        const decodedCredentials = atob(decodedUrl);
+
+        // Extraire le nom d'utilisateur
+        [username] = decodedCredentials.split(':');
+
+        if (!username) {
+          throw new Error('Nom d\'utilisateur manquant après décodage');
+        }
+
+        // Retirer le suffixe (@pve ou @pam) du nom d'utilisateur
+        username = username.split('@')[0];
+
+        // Mettre à jour le message de bienvenue avec le pseudo
+        const welcomeElement = document.getElementById('welcome-user');
+        welcomeElement.innerHTML = `Bienvenue dans votre tableau de bord <span style="color: #328bd4;">${username}</span> !`;
+      } catch (error) {
+        console.error('Erreur lors du décodage du cookie userCredentials :', error);
+        alert('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.');
+        window.location.href = '/login';
+      }
+    });
+
+    async function startVM(vmid) {
+      let username, password;
+
+      try {
+        // Récupérer le cookie contenant les identifiants
+        const userCredentials = getCookie('userCredentials');
+
+        if (!userCredentials) {
+          throw new Error('Cookie userCredentials introuvable');
+        }
+
+        // Décoder le cookie
+        const decodedUrl = decodeURIComponent(userCredentials);
+        const decodedCredentials = atob(decodedUrl);
+
+        // Extraire le nom d'utilisateur et le mot de passe
+        [username, password] = decodedCredentials.split(':');
+
+        if (!username || !password) {
+          throw new Error('Identifiant ou mot de passe manquant après décodage');
+        }
+      } catch (error) {
+        console.error('Erreur lors du décodage du cookie userCredentials :', error);
+        alert('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.');
+        window.location.href = '/login';
+        return; // Arrêter l'exécution si le cookie est invalide
+      }
+
+      try {
+        // Démarrer la VM avec les identifiants
+        const response = await fetch(`/vms/${vmid}/start?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`, {
+          method: 'POST',
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          throw new Error(`Erreur HTTP ${response.status} : ${response.statusText}`);
+        }
+
+        alert(`VM ${vmid} démarrée.`);
+        fetchVMs(); // Rafraîchir la liste des VMs
+      } catch (error) {
+        console.error(`Erreur lors du démarrage de la VM ${vmid}:`, error);
+      }
+    }
+
+    async function stopVM(vmid) {
+      let username, password;
+
+      try {
+        // Récupérer le cookie contenant les identifiants
+        const userCredentials = getCookie('userCredentials');
+
+        if (!userCredentials) {
+          throw new Error('Cookie userCredentials introuvable');
+        }
+
+        // Décoder le cookie
+        const decodedUrl = decodeURIComponent(userCredentials);
+        const decodedCredentials = atob(decodedUrl);
+
+        // Extraire le nom d'utilisateur et le mot de passe
+        [username, password] = decodedCredentials.split(':');
+
+        if (!username || !password) {
+          throw new Error('Identifiant ou mot de passe manquant après décodage');
+        }
+      } catch (error) {
+        console.error('Erreur lors du décodage du cookie userCredentials :', error);
+        alert('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.');
+        window.location.href = '/login';
+        return; // Arrêter l'exécution si le cookie est invalide
+      }
+
+      try {
+        // Arrêter la VM avec les identifiants
+        const response = await fetch(`/vms/${vmid}/stop?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`, {
+          method: 'POST',
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          throw new Error(`Erreur HTTP ${response.status} : ${response.statusText}`);
+        }
+
+        alert(`VM ${vmid} arrêtée.`);
+        fetchVMs(); // Rafraîchir la liste des VMs
+      } catch (error) {
+        console.error(`Erreur lors de l'arrêt de la VM ${vmid}:`, error);
+      }
+    }
+
+    // Charger initialement les VMs
+    fetchVMs();
+  </script>
+  <script src="./logout.js"></script>
+</body>
+</html>

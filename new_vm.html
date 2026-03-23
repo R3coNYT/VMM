@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Créer une nouvelle machine virtuelle</title>
+  <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.12.0/css/all.css">
+  <link rel="icon" type="image/x-icon" href="./VMM.ico">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f9f9f9;
+    }
+
+    /* Navbar Styles */
+    .modern-navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      background-color: #2c3e50;
+      color: white;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      flex-wrap: wrap; /* Permettre le passage à la ligne pour les petits écrans */
+    }
+
+    .modern-navbar .logo {
+      font-size: 1.5em;
+      font-weight: bold;
+      flex: 1 1 auto;
+    }
+
+    .modern-navbar .nav-links {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap; /* Empiler les liens sur les petits écrans */
+      gap: 10px;
+      justify-content: flex-end; /* Aligner les liens à droite */
+      flex: 1 1 auto;
+    }
+
+    .modern-navbar .nav-links li {
+      display: inline;
+    }
+
+    .modern-navbar .nav-links a {
+      text-decoration: none;
+      font-weight: bold;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 15px;
+      background-color: #364b61;
+      transition: background-color 0.3s ease;
+      text-align: center;
+    }
+
+    .modern-navbar .nav-links a:hover {
+      background-color: #2c3e50;
+    }
+
+    #logout {
+      background-color: #991818;
+    }
+
+    #logout:hover {
+      background-color: #bb2121;
+    }
+
+    /* Welcome Section */
+    .welcome {
+      text-align: center;
+      padding: 20px;
+      background-color: #ecf0f1;
+      border-bottom: 1px solid #dcdcdc;
+    }
+
+    .welcome h1 {
+      margin: 0;
+      font-size: 2em;
+      color: #2c3e50;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 30px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #ddd;
+      margin-bottom: 20px;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      border: 1px solid #ddd;
+      border-bottom: none;
+      border-top-left-radius: 15px;
+      border-top-right-radius: 15px;
+      background: #f9f9f9;
+      margin-right: 5px;
+    }
+
+    .tab.active {
+      background: #2c3e50;
+      color: white;
+      border-color: #2c3e50;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input, select {
+      width: 98%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 10px 15px;
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      border-radius: 15px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    /* Responsive Styles */
+    @media (max-width: 885px) {
+      .modern-navbar {
+        flex-direction: column; /* Empiler les éléments */
+        align-items: flex-start;
+      }
+
+      .modern-navbar .nav-links {
+        justify-content: flex-start;
+        margin-top: 15px;
+      }
+
+      .modern-navbar .nav-links li {
+        margin-bottom: 15px;
+      }
+
+      .modern-navbar .nav-links a {
+        width: 100%; /* Chaque lien prend toute la largeur disponible */
+      }
+    }
+  </style>
+</head>
+<body>
+    <nav class="modern-navbar">
+        <img src="./img/VMM.png" alt="VMM" style="width: 50px; margin-right: 5px;">
+        <div class="logo">Virtual Machines Manager</div>
+        <ul class="nav-links">
+            <li><a href="/dashboard">Accueil</a></li>
+            <li><a href="https://www.canva.com/design/DAGdy8ez_i0/8oSJ8xHat-2Lvol-OGj4XQ/view?utm_content=DAGdy8ez_i0&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hd46a505919#1" target="_blank">Tuto</a></li>
+            <li><a href="/clone-vm">Cloner VM</a></li>
+            <li><a href="/new-vm">Nouvelle VM</a></li>
+            <li><a href="/del-vm">Supprimer VM</a></li>
+            <li><a href="#" id="logout">Se déconnecter</a></li>
+        </ul>
+    </nav>
+    
+    <div class="welcome">
+        <h1 id="welcome-user">Créer une nouvelle Machine Virtuelle</h1>
+    </div>
+
+  <div class="container">
+    <div class="tabs">
+      <div class="tab active" data-target="general">Général</div>
+      <div class="tab" data-target="os">OS</div>
+      <div class="tab" data-target="disks">Disque</div>
+      <div class="tab" data-target="cpu1">CPU</div>
+      <div class="tab" data-target="memory">RAM</div>
+      <div class="tab" data-target="confirm">Confirmer</div>
+    </div>
+
+    <form id="createVmForm">
+      <!-- General -->
+      <div class="tab-content active" id="general">
+        <div class="form-group">
+          <label for="vmid">VM ID:</label>
+          <input type="number" id="vmid" name="vmid" required>
+        </div>
+        <div class="form-group">
+          <label for="name">Nom:</label>
+          <input type="text" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+            <label for="tags">Tags:</label>
+            <input type="text" id="tags" name="tags" placeholder="Enter tags (comma-separated)">
+          </div>
+      </div>
+
+      <!-- OS -->
+      <div class="tab-content" id="os">
+        <div class="form-group">
+          <label for="iso-image">ISO:</label>
+          <select id="iso-image" name="isoImage" required>
+            <!-- Dynamically load ISO options -->
+          </select>
+        </div>
+      </div>
+
+      <!-- Disks -->
+      <div class="tab-content" id="disks">
+        <div class="form-group">
+          <label for="storage">Stockage :</label>
+          <select id="storage" name="storage" required>
+            <option value="">Chargement des stockages...</option>
+          </select>
+          <small id="storage-info" style="display:block;margin-top:6px;color:#555;"></small>
+        </div>
+
+        <div class="form-group">
+          <label for="disk-size">Taille du Disque (GiB) :</label>
+          <input type="number" id="disk-size" name="diskSize" required min="1">
+          <small id="disk-hint" style="display:block;margin-top:6px;color:#777;"></small>
+        </div>
+      </div>
+
+      <!-- CPU -->
+      <div class="tab-content" id="cpu1">
+        <div class="form-group">
+          <label for="sockets">Sockets:</label>
+          <input type="number" id="sockets" name="sockets" required>
+        </div>
+        <div class="form-group">
+          <label for="cores">Coeurs:</label>
+          <input type="number" id="cores" name="cores" required>
+        </div>
+      </div>
+
+      <!-- Memory -->
+      <div class="tab-content" id="memory">
+        <div class="form-group">
+          <label for="memory">RAM (MiB):</label>
+          <input type="number" id="memory" name="memory" required>
+        </div>
+      </div>
+
+      <!-- Confirm -->
+      <div class="tab-content" id="confirm">
+        <h3>Créer votre nouvelle Machine Virtuelle</h3>
+        <button type="submit" class="button">Créer</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.target).classList.add('active');
+            });
+        });
+
+        // Fonction pour récupérer les cookies
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+
+        let username, password;
+
+        try {
+            // Récupérer et décoder le cookie contenant les identifiants
+            const userCredentials = getCookie('userCredentials');
+            if (!userCredentials) throw new Error('Cookie userCredentials introuvable');
+
+            const decodedUrl = decodeURIComponent(userCredentials);
+            const decodedCredentials = atob(decodedUrl);
+            [username, password] = decodedCredentials.split(':');
+
+            if (!username || !password) throw new Error('Identifiant ou mot de passe manquant');
+        } catch (error) {
+            console.error('Erreur lors du décodage du cookie userCredentials :', error);
+            alert('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.');
+            window.location.href = '/login';
+            return;
+        }
+
+        async function fetchIso() {
+            const isoImageSelect = document.getElementById('iso-image');
+            try {
+                const response = await fetch(`/iso-list?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`);
+                if (!response.ok) throw new Error('Failed to fetch ISO images');
+
+                const isoImages = await response.json();
+                isoImageSelect.innerHTML = isoImages
+                    .map(iso => `<option value="${iso.volid}">${iso.volid}</option>`)
+                    .join('');
+            } catch (error) {
+                console.error('Error fetching ISO images:', error);
+                isoImageSelect.innerHTML = '<option value="">Erreur lors du chargement des ISO</option>';
+            }
+        }
+
+        async function fetchVMID() {
+            const vmidInput = document.getElementById('vmid');
+            try {
+                const response = await fetch(`/all-vms?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`);
+                if (!response.ok) throw new Error('Failed to fetch VMs');
+
+                const vms = await response.json();
+                const maxVMID = Math.max(...vms.map(vm => vm.vmid), 0);
+                vmidInput.value = maxVMID + 1;
+            } catch (error) {
+                console.error('Error fetching VMID:', error);
+                vmidInput.placeholder = 'Enter VM ID';
+            }
+        }
+
+        async function fetchStorages() {
+          const storageSelect = document.getElementById('storage');
+          const infoEl = document.getElementById('storage-info');
+          const diskHint = document.getElementById('disk-hint');
+
+          try {
+            const resp = await fetch(`/storages?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`);
+            if (!resp.ok) throw new Error('Failed to fetch storages');
+            const storages = await resp.json();
+
+            if (!storages.length) {
+              storageSelect.innerHTML = '<option value="">Aucun stockage compatible</option>';
+              infoEl.textContent = 'Aucun storage acceptant des disques VM (content: images).';
+              return;
+            }
+
+            storageSelect.innerHTML = storages.map(s => {
+              const freeTxt = (s.availGiB != null) ? ` — libre: ${s.availGiB} GiB` : '';
+              return `<option value="${s.storage}" data-avail="${s.availGiB ?? ''}">
+                        ${s.storage} (${s.type})${freeTxt}
+                      </option>`;
+            }).join('');
+
+            // MAJ info + contrainte taille
+            const updateInfo = () => {
+              const opt = storageSelect.selectedOptions[0];
+              const avail = parseFloat(opt?.dataset?.avail || 'NaN');
+              if (!isNaN(avail)) {
+                infoEl.textContent = `Espace libre estimé : ${avail} GiB`;
+                // aide à l’input
+                const diskInput = document.getElementById('disk-size');
+                diskInput.max = Math.floor(avail); // limite hard HTML
+                diskHint.textContent = `Max recommandé : ${Math.floor(avail)} GiB (selon espace libre).`;
+              } else {
+                infoEl.textContent = 'Espace libre indisponible pour ce storage.';
+                diskHint.textContent = '';
+              }
+            };
+
+            storageSelect.addEventListener('change', updateInfo);
+            updateInfo();
+          } catch (e) {
+            console.error('Error fetching storages:', e);
+            storageSelect.innerHTML = '<option value="">Erreur lors du chargement des storages</option>';
+          }
+        }
+
+        function validateDiskSize() {
+          const storageSelect = document.getElementById('storage');
+          const diskInput = document.getElementById('disk-size');
+          const opt = storageSelect.selectedOptions[0];
+          const avail = parseFloat(opt?.dataset?.avail || 'NaN');
+          if (!isNaN(avail) && parseFloat(diskInput.value) > avail) {
+            alert(`La taille du disque dépasse l'espace libre (${avail} GiB).`);
+            diskInput.value = Math.floor(avail);
+          }
+        }
+
+        document.getElementById('disk-size').addEventListener('blur', validateDiskSize);
+
+        fetchIso();
+        fetchVMID();
+        fetchStorages();
+
+        document.getElementById('createVmForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData);
+
+            // Transformer les tags en tableau
+            if (data.tags) {
+                data.tags = data.tags.split(',').map(tag => tag.trim());
+            } else {
+                data.tags = []; // Si aucun tag n'est fourni
+            }
+
+            data.username = username;
+            data.password = password;
+
+            try {
+                const response = await fetch('/new-vm', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                });
+
+                if (response.ok) {
+                    alert('VM créée avec succès !');
+                    const result = await response.json();
+                    window.location.href = '/dashboard';
+                } else {
+                    const errorText = await response.text();
+                    alert(`Erreur lors de la création de la VM : ${errorText}`);
+                }
+            } catch (error) {
+                console.error('Erreur :', error);
+                alert('Une erreur est survenue lors de la création de la VM.');
+            }
+        });
+    });
+  </script>
+  <script src="./logout.js"></script>
+</body>
+</html>
