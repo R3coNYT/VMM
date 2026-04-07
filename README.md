@@ -1,7 +1,7 @@
 # VMM — Virtual Machine Manager
 
 Interface web Node.js pour gérer des machines virtuelles Proxmox VE.  
-Supporte plusieurs nodes, gestion des VMs (démarrage, arrêt, clone, création, suppression) et accès console VNC.
+Supporte plusieurs nodes, gestion des VMs (démarrage, arrêt, clone, création, suppression), accès console VNC et monitoring CPU/RAM en temps réel.
 
 ---
 
@@ -79,15 +79,24 @@ pm2 stop VMM            # arrêter
 
 | Page | Description |
 |---|---|
-| `/dashboard` | Tableau de bord — liste des VMs par node |
+| `/dashboard` | Tableau de bord — liste des VMs par node avec monitoring en temps réel |
 | `/clone-vm` | Cloner une VM depuis un template |
 | `/new-vm` | Créer une nouvelle VM |
 | `/del-vm` | Supprimer une VM |
+
+### Tableau de bord
+- Cartes par VM avec statut (démarrée / arrêtée), VMID, CPU, RAM, Disk
+- **Barres d'utilisation temps réel** (CPU et RAM en %) sur chaque VM active — rafraîchissement automatique toutes les 5 secondes sans rechargement de page
+- Boutons d'action : démarrer, arrêter, ouvrir la console VNC (noVNC)
 
 ### Multi-nodes
 Une barre de sélection de nodes est présente sur chaque page.  
 Le node sélectionné est mémorisé dans `sessionStorage` et partagé entre les pages.  
 Les VMs, ISOs, storages et actions (start/stop/delete/clone/create) ciblent dynamiquement le node actif.
+
+### Thème clair / sombre
+Bascule persistante via `localStorage` — pas de flash au chargement.  
+Le bouton de bascule est injecté automatiquement dans la navbar sur toutes les pages authentifiées.
 
 ### Accès
 - **HTTPS** : `https://<IP>:4000`
@@ -107,12 +116,13 @@ VMM/          ← dépôt git (sources)
 ├── update.sh           # Script de mise à jour
 ├── package.json
 └── public/
-    ├── index.html      # Dashboard
+    ├── style.css       # Design system commun (thème glassmorphic dark/light)
+    ├── index.html      # Dashboard + monitoring CPU/RAM
     ├── clone_vm.html
     ├── new_vm.html
     ├── del_vm.html
     ├── login.html
-    └── logout.js
+    └── logout.js       # Déconnexion + injection bascule thème
 ```
 
 ---
