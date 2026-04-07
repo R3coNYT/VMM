@@ -23,6 +23,7 @@ chmod +x install.sh && sudo ./install.sh
 ```
 
 The install script:
+
 1. Automatically installs system dependencies (`git`, `nodejs`, `npm`, `openssl`) if missing
 2. Installs **pm2** globally via npm
 3. Clones the project into `/opt/vmm`
@@ -56,6 +57,7 @@ sudo /opt/vmm/update.sh
 ```
 
 The update script:
+
 - Checks whether remote commits are available
 - Displays the list of new commits before applying
 - Warns if local files have been modified (excluding `vmm.conf` and `*.pem`)
@@ -78,27 +80,32 @@ pm2 stop VMM            # stop
 ## Features
 
 | Page | Description |
-|---|---|
+|------|-------------|
+
 | `/dashboard` | Dashboard — VM list per node with real-time monitoring |
 | `/clone-vm` | Clone a VM from a template |
 | `/new-vm` | Create a new VM |
 | `/del-vm` | Delete a VM |
 
 ### Dashboard
+
 - Per-VM cards showing status (running / stopped), VMID, CPU, RAM, Disk
 - **Real-time usage bars** (CPU and RAM in %) on each running VM — automatic refresh every 5 seconds without page reload
 - Action buttons: start, stop, open VNC console (noVNC)
 
 ### Multi-node
+
 A node selection bar is available on every page.  
 The selected node is stored in `sessionStorage` and shared across pages.  
 VMs, ISOs, storages and all actions (start/stop/delete/clone/create) dynamically target the active node.
 
 ### Light / Dark theme
+
 Persistent toggle via `localStorage` — no flash on load.  
 The toggle button is automatically injected into the navbar on all authenticated pages.
 
 ### Access
+
 - **HTTPS**: `https://<IP>:4000`
 - Automatic HTTP → HTTPS redirect on port 80
 
@@ -106,7 +113,7 @@ The toggle button is automatically injected into the navbar on all authenticated
 
 ## Structure
 
-```
+``` structure
 VMM/                      ← git repository (sources)
 /opt/vmm/                 ← installation directory
 ├── app.js              # Express server — backend API
