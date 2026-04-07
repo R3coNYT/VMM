@@ -80,7 +80,7 @@ if [ -d "$INSTALL_DIR/.git" ]; then
     warn "$INSTALL_DIR existe déjà, mise à jour du code..."
     git -C "$INSTALL_DIR" pull origin main
 else
-    git clone https://github.com/R3coNYT/proxmox_nodejs.git "$INSTALL_DIR"
+    git clone https://github.com/R3coNYT/VMM.git "$INSTALL_DIR"
 fi
 ok "Code déployé dans $INSTALL_DIR"
 
