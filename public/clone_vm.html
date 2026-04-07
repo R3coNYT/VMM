@@ -50,7 +50,7 @@
       font-size: 0.95em;
       font-weight: 600;
       cursor: pointer;
-      margin-top: 4px;
+      margin-top: 10px;
       transition: box-shadow var(--transition), filter var(--transition), transform var(--transition);
     }
 
@@ -81,16 +81,20 @@
         <div class="container">
             <h1>Cloner une VM</h1>
             <form id="cloneVmForm">
-              <label for="sourceVmid">ID de la VM source :</label>
-              <select id="sourceVmid" required>
-                <option value="" disabled selected>Chargement des VMs...</option>
-              </select>
-
-              <label for="newVmid">Nouvel ID de la VM clonée :</label>
-              <input type="number" id="newVmid" placeholder="Chargement..." disabled required>
-
-              <label for="newVmName">Nom de la VM clonée :</label>
-              <input type="text" id="newVmName" placeholder="Entrez le nom de la nouvelle VM" required>
+              <div class="form-group">
+                <label for="sourceVmid">ID de la VM source :</label>
+                <select id="sourceVmid" required>
+                  <option value="" disabled selected>Chargement des VMs...</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="newVmid">Nouvel ID de la VM clonée :</label>
+                <input type="number" id="newVmid" placeholder="Chargement..." disabled required>
+              </div>
+              <div class="form-group">
+                <label for="newVmName">Nom de la VM clonée :</label>
+                <input type="text" id="newVmName" placeholder="Entrez le nom de la nouvelle VM" required>
+              </div>
 
               <button type="submit">Cloner</button>
             </form>
