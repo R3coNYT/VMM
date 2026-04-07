@@ -7,7 +7,8 @@ set -Eeuo pipefail
 # Script d'installation — proxmox_nodejs (Debian/Proxmox)
 # ============================================================
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+INSTALL_DIR="/opt/vmm"
+SCRIPT_SELF="$(realpath "${BASH_SOURCE[0]}")"
 
 COLOR_RED="\033[1;31m"
 COLOR_GREEN="\033[1;32m"
@@ -41,6 +42,14 @@ echo ""
 # ── Installation des prérequis ───────────────────────────────────────────────
 log "Vérification et installation des prérequis..."
 
+# git
+if ! command -v git &>/dev/null; then
+    log "Installation de git..."
+    apt-get update -qq
+    apt-get install -y git
+fi
+ok "git $(git --version | awk '{print $3}') détecté"
+
 # OpenSSL
 if ! command -v openssl &>/dev/null; then
     log "Installation d'OpenSSL..."
@@ -63,6 +72,17 @@ if ! command -v pm2 &>/dev/null; then
 fi
 ok "pm2 $(pm2 --version) détecté"
 echo ""
+
+# ── Clonage dans /opt/vmm ───────────────────────────────────────────────────
+log "Déploiement de VMM dans $INSTALL_DIR..."
+
+if [ -d "$INSTALL_DIR/.git" ]; then
+    warn "$INSTALL_DIR existe déjà, mise à jour du code..."
+    git -C "$INSTALL_DIR" pull origin main
+else
+    git clone https://github.com/R3coNYT/proxmox_nodejs.git "$INSTALL_DIR"
+fi
+ok "Code déployé dans $INSTALL_DIR"
 
 # ── Détection des interfaces réseau ──────────────────────────────────────────
 log "Récupération des interfaces réseau disponibles..."
@@ -109,9 +129,9 @@ ok "Interface sélectionnée : ${COLOR_WHITE}$SELECTED_NAME${COLOR_RESET} (${COL
 
 # ── Écriture de vmm.conf ─────────────────────────────────────────────────────
 echo ""
-log "Écriture de la configuration dans vmm.conf..."
+log "Écriture de la configuration dans $INSTALL_DIR/vmm.conf..."
 
-CONF_PATH="$SCRIPT_DIR/vmm.conf"
+CONF_PATH="$INSTALL_DIR/vmm.conf"
 
 cat > "$CONF_PATH" <<EOF
 # VMM - Virtual Machine Manager
@@ -130,8 +150,8 @@ ok "vmm.conf créé → IP=$SELECTED_IP"
 echo ""
 log "Génération des certificats SSL auto-signés..."
 
-CERT_PATH="$SCRIPT_DIR/cert.pem"
-KEY_PATH="$SCRIPT_DIR/key.pem"
+CERT_PATH="$INSTALL_DIR/cert.pem"
+KEY_PATH="$INSTALL_DIR/key.pem"
 CONFIG_TMP=$(mktemp)
 
 cat > "$CONFIG_TMP" <<EOF
@@ -168,7 +188,7 @@ fi
 # ── Installation des dépendances npm ─────────────────────────────────────────
 echo ""
 log "Installation des dépendances npm..."
-cd "$SCRIPT_DIR"
+cd "$INSTALL_DIR"
 npm install
 
 # ── Lancement avec pm2 ───────────────────────────────────────────────────────
@@ -180,7 +200,7 @@ if pm2 describe VMM &>/dev/null; then
     pm2 restart VMM
     ok "VMM redémarré via pm2"
 else
-    pm2 start app.js --name VMM
+    pm2 start "$INSTALL_DIR/app.js" --name VMM
     ok "VMM démarré via pm2"
 fi
 
@@ -190,6 +210,14 @@ log "Activation du démarrage automatique au boot (pm2 startup)..."
 pm2 startup systemd -u root --hp /root | tail -1 | bash || \
     warn "Commande pm2 startup : lancez manuellement la commande affichée ci-dessus si nécessaire."
 echo ""
+
+chmod +x "$INSTALL_DIR/update.sh"
+
+# ── Nettoyage — suppression du script d'installation ─────────────────────────
+if [ "$SCRIPT_SELF" != "$INSTALL_DIR/install.sh" ]; then
+    rm -f "$SCRIPT_SELF"
+    ok "install.sh supprimé"
+fi
 
 # ── Résumé ────────────────────────────────────────────────────────────────────
 echo -e "${COLOR_GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${COLOR_RESET}"

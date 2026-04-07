@@ -8,6 +8,17 @@ set -Eeuo pipefail
 # =============================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+INSTALL_DIR="/opt/vmm"
+
+# Si on est déjà dans /opt/vmm on l'utilise directement, sinon on cible /opt/vmm
+if [ -d "$INSTALL_DIR/.git" ]; then
+    WORK_DIR="$INSTALL_DIR"
+elif [ -d "$SCRIPT_DIR/.git" ]; then
+    WORK_DIR="$SCRIPT_DIR"
+else
+    err "Répertoire d'installation introuvable ($INSTALL_DIR ou $SCRIPT_DIR)."
+    exit 1
+fi
 
 COLOR_RED="\033[1;31m"
 COLOR_GREEN="\033[1;32m"
@@ -47,16 +58,16 @@ if ! command -v git &>/dev/null; then
     exit 1
 fi
 
-if [ ! -d "$SCRIPT_DIR/.git" ]; then
-    err "Ce répertoire n'est pas un dépôt git : $SCRIPT_DIR"
+if [ ! -d "$WORK_DIR/.git" ]; then
+    err "Ce répertoire n'est pas un dépôt git : $WORK_DIR"
     exit 1
 fi
-ok "Dépôt git détecté"
+ok "Dépôt git détecté ($WORK_DIR)"
 
 # ── Récupération des changements distants ─────────────────────────────────────
 echo ""
 log "Récupération des informations depuis le dépôt distant..."
-cd "$SCRIPT_DIR"
+cd "$WORK_DIR"
 
 git fetch origin 2>/dev/null
 ok "git fetch effectué"
@@ -122,6 +133,8 @@ if git diff HEAD~"$COMMIT_COUNT" HEAD -- package.json &>/dev/null | grep -q .; t
     npm install
     ok "Dépendances npm mises à jour"
 fi
+
+chmod +x update.sh
 
 # ── Résumé ────────────────────────────────────────────────────────────────────
 echo ""
