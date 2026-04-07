@@ -8,9 +8,24 @@ const fetch = require('node-fetch');
 const path = require('path');
 const http = require('http');
 
+function loadConf(filepath) {
+  const raw = fs.readFileSync(filepath, 'utf8');
+  const conf = {};
+  for (const line of raw.split('\n')) {
+    const t = line.trim();
+    if (!t || t.startsWith('#')) continue;
+    const eq = t.indexOf('=');
+    if (eq === -1) continue;
+    conf[t.slice(0, eq).trim()] = t.slice(eq + 1).trim();
+  }
+  return conf;
+}
+
+const conf = loadConf(path.join(__dirname, 'vmm.conf'));
+const IP   = conf.IP;
+const PORT = parseInt(conf.PORT, 10) || 4000;
+
 const app = express();
-const PORT = 4000;
-const IP = "192.168.1.42";
 
 const httpsOptions = {
   key: fs.readFileSync('key.pem'),
@@ -102,6 +117,51 @@ app.post('/authenticate', async (req, res) => {
       }
   } catch (error) {
       res.status(500).json({ message: 'Erreur réseau ou serveur', error: error.message });
+  }
+});
+
+app.get('/nodes', async (req, res) => {
+  const { username, password } = req.query;
+
+  if (!username || !password) {
+    return res.status(400).json({ message: 'Identifiant ou mot de passe manquant.' });
+  }
+
+  try {
+    const authResponse = await axios.post(
+      `https://${IP}:8006/api2/json/access/ticket`,
+      new URLSearchParams({ username, password }),
+      { httpsAgent }
+    );
+
+    const { ticket, CSRFPreventionToken } = authResponse.data.data;
+
+    const nodesResponse = await axios.get(
+      `https://${IP}:8006/api2/json/nodes`,
+      {
+        headers: {
+          Cookie: `PVEAuthCookie=${ticket}`,
+          CSRFPreventionToken,
+        },
+        httpsAgent,
+      }
+    );
+
+    const nodes = nodesResponse.data.data.map(n => ({
+      node:      n.node,
+      status:    n.status,
+      maxcpu:    n.maxcpu,
+      maxmem:    +(n.maxmem  / 1024 / 1024 / 1024).toFixed(2),
+      mem:       +(n.mem     / 1024 / 1024 / 1024).toFixed(2),
+      maxdisk:   +(n.maxdisk / 1024 / 1024 / 1024).toFixed(2),
+      disk:      +(n.disk    / 1024 / 1024 / 1024).toFixed(2),
+      uptime:    n.uptime,
+    }));
+
+    res.json(nodes);
+  } catch (error) {
+    console.error('Erreur lors de la récupération des nodes :', error.response?.data || error.message);
+    res.status(500).json({ message: 'Erreur lors de la récupération des nodes.', error: error.response?.data || error.message });
   }
 });
 
@@ -242,6 +302,7 @@ app.get('/vms', async (req, res) => {
       vms.push({
         vmid: vm.vmid,
         name: vm.name,
+        node: vm.node,
         maxcpu: vm.maxcpu,
         maxmem: (vm.maxmem / 1024 / 1024 / 1024).toFixed(2),
         maxdisk: (vm.maxdisk / 1024 / 1024 / 1024).toFixed(2),
@@ -260,10 +321,13 @@ app.get('/vms', async (req, res) => {
 
 app.post('/vms/:vmid/start', async (req, res) => {
   const { vmid } = req.params;
-  const { username, password } = req.query;
+  const { username, password, node } = req.query;
 
   if (!username || !password) {
     return res.status(400).send("Erreur : Identifiant ou mot de passe manquant.");
+  }
+  if (!node) {
+    return res.status(400).send("Erreur : paramètre 'node' manquant.");
   }
 
   try {
@@ -279,7 +343,7 @@ app.post('/vms/:vmid/start', async (req, res) => {
     const { ticket, CSRFPreventionToken } = authResponse.data.data;
 
     await axios.post(
-      `https://${IP}:8006/api2/json/nodes/FlavProx/qemu/${vmid}/status/start`,
+      `https://${IP}:8006/api2/json/nodes/${node}/qemu/${vmid}/status/start`,
       {},
       {
         headers: {
@@ -299,10 +363,13 @@ app.post('/vms/:vmid/start', async (req, res) => {
 
 app.post('/vms/:vmid/stop', async (req, res) => {
   const { vmid } = req.params;
-  const { username, password } = req.query;
+  const { username, password, node } = req.query;
 
   if (!username || !password) {
     return res.status(400).send("Erreur : Identifiant ou mot de passe manquant.");
+  }
+  if (!node) {
+    return res.status(400).send("Erreur : paramètre 'node' manquant.");
   }
 
   try {
@@ -318,7 +385,7 @@ app.post('/vms/:vmid/stop', async (req, res) => {
     const { ticket, CSRFPreventionToken } = authResponse.data.data;
 
     await axios.post(
-      `https://${IP}:8006/api2/json/nodes/FlavProx/qemu/${vmid}/status/stop`,
+      `https://${IP}:8006/api2/json/nodes/${node}/qemu/${vmid}/status/stop`,
       {},
       {
         headers: {
@@ -367,6 +434,7 @@ app.get('/all-vms', async (req, res) => {
           .map(vm => ({
               vmid: vm.vmid,
               name: vm.name,
+              node: vm.node,
               maxcpu: vm.maxcpu,
               maxmem: (vm.maxmem / 1024 / 1024 / 1024).toFixed(2),
               maxdisk: (vm.maxdisk / 1024 / 1024 / 1024).toFixed(2),
@@ -382,11 +450,11 @@ app.get('/all-vms', async (req, res) => {
 });
 
 app.post('/clone-vm', async (req, res) => {
-  const { sourceVmid, newVmid, newVmName } = req.body;
+  const { sourceVmid, newVmid, newVmName, node } = req.body;
   const { username, password } = req.query;
 
-  if (!username || !password || !sourceVmid || !newVmid || !newVmName) {
-    return res.status(400).json({ message: 'Tous les champs sont requis.' });
+  if (!username || !password || !sourceVmid || !newVmid || !newVmName || !node) {
+    return res.status(400).json({ message: 'Tous les champs sont requis (dont node).' });
   }
 
   try {
@@ -399,7 +467,7 @@ app.post('/clone-vm', async (req, res) => {
     const { ticket, CSRFPreventionToken } = authResponse.data.data;
 
     const cloneResponse = await axios.post(
-      `https://${IP}:8006/api2/json/nodes/FlavProx/qemu/${sourceVmid}/clone`,
+      `https://${IP}:8006/api2/json/nodes/${node}/qemu/${sourceVmid}/clone`,
       new URLSearchParams({
         newid: newVmid,
         name: newVmName,
@@ -414,7 +482,7 @@ app.post('/clone-vm', async (req, res) => {
     );
 
     const updateTagsResponse = await axios.put(
-      `https://${IP}:8006/api2/json/nodes/FlavProx/qemu/${newVmid}/config`,
+      `https://${IP}:8006/api2/json/nodes/${node}/qemu/${newVmid}/config`,
       new URLSearchParams({
         tags: 'sae',
       }),
@@ -442,10 +510,13 @@ app.post('/clone-vm', async (req, res) => {
 });
 
 app.get('/iso-list', async (req, res) => {
-  const { username, password } = req.query;
+  const { username, password, node } = req.query;
 
   if (!username || !password) {
       return res.status(400).json({ message: 'Identifiant ou mot de passe manquant.' });
+  }
+  if (!node) {
+      return res.status(400).json({ message: "Paramètre 'node' manquant." });
   }
 
   try {
@@ -457,7 +528,7 @@ app.get('/iso-list', async (req, res) => {
 
       const ticket = ticketResponse.data.data.ticket;
 
-      const isoUrl = `https://${IP}:8006/api2/json/nodes/FlavProx/storage/local/content`;
+      const isoUrl = `https://${IP}:8006/api2/json/nodes/${node}/storage/local/content`;
 
       const isoResponse = await axios.get(isoUrl, {
           headers: {
@@ -475,9 +546,12 @@ app.get('/iso-list', async (req, res) => {
 });
 
 app.get('/storages', async (req, res) => {
-  const { username, password } = req.query;
+  const { username, password, node } = req.query;
   if (!username || !password) {
     return res.status(400).json({ message: 'Identifiant ou mot de passe manquant.' });
+  }
+  if (!node) {
+    return res.status(400).json({ message: "Paramètre 'node' manquant." });
   }
 
   try {
@@ -489,9 +563,9 @@ app.get('/storages', async (req, res) => {
     );
     const ticket = ticketResp.data.data.ticket;
 
-    // Liste des storages du node "FlavProx"
+    // Liste des storages du node
     const storagesResp = await axios.get(
-      `https://${IP}:8006/api2/json/nodes/FlavProx/storage`,
+      `https://${IP}:8006/api2/json/nodes/${node}/storage`,
       { headers: { Cookie: `PVEAuthCookie=${ticket}` }, httpsAgent }
     );
 
@@ -500,7 +574,7 @@ app.get('/storages', async (req, res) => {
       storagesResp.data.data.map(async (st) => {
         try {
           const statusResp = await axios.get(
-            `https://${IP}:8006/api2/json/nodes/FlavProx/storage/${encodeURIComponent(st.storage)}/status`,
+            `https://${IP}:8006/api2/json/nodes/${node}/storage/${encodeURIComponent(st.storage)}/status`,
             { headers: { Cookie: `PVEAuthCookie=${ticket}` }, httpsAgent }
           );
           const s = statusResp.data.data;
@@ -542,7 +616,7 @@ app.get('/storages', async (req, res) => {
 });
 
 app.post('/new-vm', async (req, res) => {
-  const { username, password, vmid, name, diskSize, isoImage, sockets, cores, memory, tags, storage  } = req.body;
+  const { username, password, vmid, name, diskSize, isoImage, sockets, cores, memory, tags, storage, node } = req.body;
 
   if (!username || !password) {
       return res.status(400).json({ message: 'Identifiant ou mot de passe manquant.' });
@@ -557,7 +631,10 @@ app.post('/new-vm', async (req, res) => {
 
       const { ticket, CSRFPreventionToken } = authResponse.data.data;
 
-      const createVmUrl = `https://${IP}:8006/api2/json/nodes/FlavProx/qemu`;
+      if (!node) {
+        return res.status(400).json({ message: "Paramètre 'node' manquant." });
+      }
+      const createVmUrl = `https://${IP}:8006/api2/json/nodes/${node}/qemu`;
 
       const params = new URLSearchParams({
           vmid,
@@ -594,11 +671,14 @@ app.post('/new-vm', async (req, res) => {
 });
 
 app.delete('/vms/:vmid', async (req, res) => {
-  const { username, password } = req.query;
+  const { username, password, node } = req.query;
   const { vmid } = req.params;
 
   if (!username || !password) {
     return res.status(400).send("Erreur : Identifiant ou mot de passe manquant.");
+  }
+  if (!node) {
+    return res.status(400).send("Erreur : paramètre 'node' manquant.");
   }
 
   try {
@@ -614,7 +694,7 @@ app.delete('/vms/:vmid', async (req, res) => {
     const { ticket, CSRFPreventionToken } = ticketResponse.data.data;
 
     const deleteVmResponse = await axios.delete(
-      `https://${IP}:8006/api2/json/nodes/FlavProx/qemu/${vmid}`,
+      `https://${IP}:8006/api2/json/nodes/${node}/qemu/${vmid}`,
       {
         headers: {
           Cookie: `PVEAuthCookie=${ticket}`,

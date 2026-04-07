@@ -294,6 +294,33 @@
         width: 100%; /* Chaque lien prend toute la largeur disponible */
       }
     }
+
+    /* Node Bar */
+    .node-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 30px;
+      background: #fff;
+      border-bottom: 1px solid #dcdcdc;
+      flex-wrap: wrap;
+    }
+    .node-bar-label { font-weight: bold; color: #2c3e50; }
+    .node-tab {
+      padding: 6px 18px;
+      border-radius: 20px;
+      border: 2px solid #328bd4;
+      background: #fff;
+      color: #328bd4;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.9em;
+      transition: background 0.2s, color 0.2s;
+    }
+    .node-tab.active  { background: #328bd4; color: #fff; }
+    .node-tab:hover:not(.active) { background: #e8f4fd; }
+    .node-tab.offline { border-color: #e74c3c; color: #e74c3c; }
+    .node-tab.offline.active { background: #e74c3c; color: #fff; }
   </style>
 </head>
 <body>
@@ -321,6 +348,8 @@
     <h1 id="welcome-user">Bienvenue dans votre tableau de bord</h1>
   </div>
 
+  <div class="node-bar" id="nodeBar"><span class="node-bar-label">Node :</span></div>
+
   <div class="container">
     <div class="column1">
       <h1>Templates</h1>
@@ -333,6 +362,43 @@
   </div>
 
   <script>
+    let currentNode = sessionStorage.getItem('selectedNode') || null;
+
+    async function loadNodes() {
+      let u, pw;
+      try {
+        const raw = getCookie('userCredentials');
+        if (!raw) return;
+        [u, pw] = atob(decodeURIComponent(raw)).split(':');
+        if (!u || !pw) return;
+      } catch(e) { return; }
+      const bar = document.getElementById('nodeBar');
+      if (!bar) return;
+      try {
+        const resp = await fetch(`/nodes?username=${encodeURIComponent(u)}&password=${encodeURIComponent(pw)}`);
+        if (!resp.ok) return;
+        const nodes = await resp.json();
+        if (!currentNode && nodes.length > 0) {
+          currentNode = nodes[0].node;
+          sessionStorage.setItem('selectedNode', currentNode);
+        }
+        bar.innerHTML = '<span class="node-bar-label">Node :</span>';
+        nodes.forEach(n => {
+          const tab = document.createElement('button');
+          tab.className = 'node-tab' + (n.node === currentNode ? ' active' : '') + (n.status !== 'online' ? ' offline' : '');
+          tab.textContent = n.node + (n.status !== 'online' ? ' (offline)' : '');
+          tab.addEventListener('click', () => {
+            currentNode = n.node;
+            sessionStorage.setItem('selectedNode', currentNode);
+            document.querySelectorAll('.node-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            fetchVMs();
+          });
+          bar.appendChild(tab);
+        });
+      } catch(e) { console.error('Erreur chargement nodes:', e); }
+    }
+
     async function fetchVMs() {
       // Fonction pour récupérer les cookies
       function getCookie(name) {
@@ -467,6 +533,7 @@
         }
 
         const vms = await response.json();
+        const filteredVMs = currentNode ? vms.filter(vm => vm.node === currentNode) : vms;
 
         const templateColumn = document.getElementById('templateColumn');
         const otherVmsColumn = document.getElementById('otherVmsColumn');
@@ -474,7 +541,7 @@
         templateColumn.innerHTML = '';
         otherVmsColumn.innerHTML = '';
 
-        vms.forEach(vm => {
+        filteredVMs.forEach(vm => {
           const card = document.createElement('div');
           card.classList.add('card');
 
@@ -502,13 +569,13 @@
             ? '' // Pas d'actions pour les templates
             : `
               <div class="actions">
-                <button class="button button1" onclick="startVM(${vm.vmid})">
+                <button class="button button1" onclick="startVM(${vm.vmid}, '${vm.node}')">
                   <img src="./img/start.png" alt="Démarrer">
                 </button>
-                <button class="button button2" onclick="stopVM(${vm.vmid})">
+                <button class="button button2" onclick="stopVM(${vm.vmid}, '${vm.node}')">
                   <img src="./img/stop.png" alt="Arrêter">
                 </button>
-                <a target="_blank" href="https://192.168.1.42:8006/?console=kvm&novnc=1&vmid=${vm.vmid}&vmname=${vm.name}&node=FlavProx&resize=off&cmd=" class="button3">
+                <a target="_blank" href="https://${window.location.hostname}:8006/?console=kvm&novnc=1&vmid=${vm.vmid}&vmname=${vm.name}&node=${vm.node}&resize=off&cmd=" class="button3">
                   <img src="./img/screen.png" alt="écran">
                 </a>
               </div>
@@ -598,7 +665,7 @@
       }
     });
 
-    async function startVM(vmid) {
+    async function startVM(vmid, node) {
       let username, password;
 
       try {
@@ -628,7 +695,7 @@
 
       try {
         // Démarrer la VM avec les identifiants
-        const response = await fetch(`/vms/${vmid}/start?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`, {
+        const response = await fetch(`/vms/${vmid}/start?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&node=${encodeURIComponent(node)}`, {
           method: 'POST',
           credentials: 'include',
         });
@@ -644,7 +711,7 @@
       }
     }
 
-    async function stopVM(vmid) {
+    async function stopVM(vmid, node) {
       let username, password;
 
       try {
@@ -674,7 +741,7 @@
 
       try {
         // Arrêter la VM avec les identifiants
-        const response = await fetch(`/vms/${vmid}/stop?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`, {
+        const response = await fetch(`/vms/${vmid}/stop?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&node=${encodeURIComponent(node)}`, {
           method: 'POST',
           credentials: 'include',
         });
@@ -690,7 +757,8 @@
       }
     }
 
-    // Charger initialement les VMs
+    // Charger initialement les nodes et les VMs
+    loadNodes();
     fetchVMs();
   </script>
   <script src="./logout.js"></script>

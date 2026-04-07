@@ -232,7 +232,7 @@
 
                 // Ajouter les options au select
                 sourceVmidSelect.innerHTML = templates
-                    .map(vm => `<option value="${vm.vmid}" >ID: <span class="id">${vm.vmid}</span> - Nom: <span class="name">${vm.name}</span></option>`)
+                    .map(vm => `<option value="${vm.vmid}" data-node="${vm.node || ''}">ID: ${vm.vmid} - Nom: ${vm.name}</option>`)
                     .join('');
             } catch (error) {
                 console.error('Erreur lors de la récupération des VMs avec le tag "template" :', error);
@@ -268,10 +268,11 @@
             const newVmName = document.getElementById('newVmName').value;
 
             try {
+                const nodeVal = document.getElementById('sourceVmid').selectedOptions[0]?.dataset?.node || '';
                 const response = await fetch(`/clone-vm?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sourceVmid, newVmid, newVmName })
+                    body: JSON.stringify({ sourceVmid, newVmid, newVmName, node: nodeVal })
                 });
 
                 const resultElement = document.getElementById('result');

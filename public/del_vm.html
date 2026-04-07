@@ -263,7 +263,7 @@
           vmidSelect.innerHTML = `<option value="" disabled>Aucune VM disponible (hors template et perso)</option>`;
         } else {
           vmidSelect.innerHTML = filteredVMs
-            .map(vm => `<option value="${vm.vmid}">ID: ${vm.vmid} - Nom: ${vm.name}</option>`)
+            .map(vm => `<option value="${vm.vmid}" data-node="${vm.node || ''}">ID: ${vm.vmid} - Nom: ${vm.name}</option>`)
             .join('');
         }
       } catch (error) {
@@ -280,8 +280,10 @@
     document.getElementById('deleteVmForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const vmid = document.getElementById('vmid').value;
-  
+      const vmidSelect = document.getElementById('vmid');
+      const vmid = vmidSelect.value;
+      const vmNode = vmidSelect.selectedOptions[0]?.dataset?.node || '';
+
       if (!confirm(`Êtes-vous sûr de vouloir supprimer la VM avec VMID ${vmid} ?`)) {
         return; // Annuler la suppression si l'utilisateur clique sur "Annuler"
       }
@@ -323,7 +325,7 @@
   
       try {
         // Envoi de la requête de suppression avec les identifiants
-        const response = await fetch(`/vms/${vmid}?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`, {
+        const response = await fetch(`/vms/${vmid}?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&node=${encodeURIComponent(vmNode)}`, {
           method: 'DELETE',
           credentials: 'include',
         });
