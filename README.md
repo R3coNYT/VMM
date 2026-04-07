@@ -18,7 +18,7 @@ Supporte plusieurs nodes, gestion des VMs (démarrage, arrêt, clone, création,
 ## Installation
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/R3coNYT/proxmox_nodejs/main/install.sh -o install.sh
+curl -fsSL https://raw.githubusercontent.com/R3coNYT/VMM/main/install.sh -o install.sh
 chmod +x install.sh && sudo ./install.sh
 ```
 
@@ -98,7 +98,7 @@ Les VMs, ISOs, storages et actions (start/stop/delete/clone/create) ciblent dyna
 ## Structure
 
 ```
-proxmox_nodejs/          ← dépôt git (sources)
+VMM/          ← dépôt git (sources)
 /opt/vmm/                 ← répertoire d'installation
 ├── app.js              # Serveur Express — API backend
 ├── vmm.conf            # Configuration locale (ignoré par git)

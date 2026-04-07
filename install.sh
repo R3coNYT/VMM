@@ -4,7 +4,7 @@ set -Eeuo pipefail
 
 # =============================================
 # VMM - Virtual Machine Manager
-# Script d'installation — proxmox_nodejs (Debian/Proxmox)
+# Script d'installation — VMM (Debian/Proxmox)
 # ============================================================
 
 INSTALL_DIR="/opt/vmm"

@@ -4,7 +4,7 @@ set -Eeuo pipefail
 
 # =============================================
 # VMM - Virtual Machine Manager
-# Script de mise à jour — proxmox_nodejs (Debian/Proxmox)
+# Script de mise à jour — VMM (Debian/Proxmox)
 # =============================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
