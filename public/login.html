@@ -3,79 +3,99 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login</title>
+  <title>VMM — Connexion</title>
   <link rel="icon" type="image/x-icon" href="./VMM.ico">
+  <link rel="stylesheet" href="./style.css">
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
-      margin: 0;
+      min-height: 100vh;
     }
 
-    .login-container {
+    .login-wrap {
       width: 100%;
-      max-width: 400px;
-      background: #fff;
+      max-width: 420px;
       padding: 20px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-      border-radius: 8px;
+      animation: fadeSlideUp 0.5s var(--ease) both;
     }
 
-    .login-container h2 {
+    .login-logo {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 28px;
     }
 
-    .login-container label {
-      font-weight: bold;
-      display: block;
-      margin-bottom: 5px;
+    .login-logo img {
+      width: 60px;
+      filter: drop-shadow(0 0 18px rgba(99,102,241,0.5));
     }
 
-    .login-container input {
-      width: 95%;
-      padding: 10px;
-      margin-bottom: 15px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+    .login-logo h2 {
+      margin-top: 12px;
+      font-size: 1.35em;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
     }
 
-    .login-container button {
+    .login-logo p {
+      font-size: 0.82em;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .login-card {
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px 32px 28px;
+    }
+
+    .form-group { margin-bottom: 18px; }
+
+    .login-card button {
       width: 100%;
-      padding: 10px;
-      background: #007bff;
+      padding: 12px;
+      background: var(--accent);
       color: #fff;
       border: none;
-      border-radius: 4px;
+      border-radius: 50px;
+      font-size: 0.95em;
+      font-weight: 600;
+      margin-top: 8px;
       cursor: pointer;
     }
 
-    .login-container button:hover {
-      background: #0056b3;
-    }
-
-    .error-message {
-      color: red;
-      text-align: center;
-      margin-top: 10px;
+    .login-card button:hover {
+      box-shadow: 0 0 24px var(--accent-glow);
+      filter: brightness(1.1);
     }
   </style>
 </head>
 <body>
-  <div class="login-container">
-    <h2>Connexion</h2>
-    <form id="loginForm">
-      <label for="username">Nom d'utilisateur</label>
-      <input type="text" id="username" placeholder="Entrez votre nom d'utilisateur" required>
-      <label for="password">Mot de passe</label>
-      <input type="password" id="password" placeholder="Entrez votre mot de passe" required>
-      <button type="submit">Se connecter</button>
-    </form>
-    <div id="result" class="error-message"></div>
+  <div class="login-wrap">
+    <div class="login-logo">
+      <img src="./img/VMM.png" alt="VMM">
+      <h2>Virtual Machine Manager</h2>
+      <p>Connectez-vous à votre Proxmox</p>
+    </div>
+    <div class="login-card">
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="username">Nom d'utilisateur</label>
+          <input type="text" id="username" placeholder="admin" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Mot de passe</label>
+          <input type="password" id="password" placeholder="••••••••" required>
+        </div>
+        <button type="submit">Se connecter</button>
+      </form>
+      <div id="result" class="error-message"></div>
+    </div>
   </div>
 
   <script>

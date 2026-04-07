@@ -6,321 +6,236 @@
   <title>Tableau de bord</title>
   <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.12.0/css/all.css">
   <link rel="icon" type="image/x-icon" href="./VMM.ico">
+  <link rel="stylesheet" href="./style.css">
   <style>
-    /* Styles généraux */
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f9f9f9;
-    }
-
-    /* Navbar Styles */
-    .modern-navbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 15px 30px;
-      background-color: #2c3e50;
-      color: white;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      flex-wrap: wrap; /* Permettre le passage à la ligne pour les petits écrans */
-    }
-
-    .modern-navbar .logo {
-      font-size: 1.5em;
-      font-weight: bold;
-      flex: 1 1 auto;
-    }
-
-    .modern-navbar .nav-links {
-      list-style-type: none;
-      margin: 0;
-      padding: 0;
-      display: flex;
-      flex-wrap: wrap; /* Empiler les liens sur les petits écrans */
-      gap: 10px;
-      justify-content: flex-end; /* Aligner les liens à droite */
-      flex: 1 1 auto;
-    }
-
-    .modern-navbar .nav-links li {
-      display: inline;
-    }
-
-    .modern-navbar .nav-links a {
-      text-decoration: none;
-      font-weight: bold;
-      color: white;
-      padding: 10px 15px;
-      border-radius: 15px;
-      background-color: #364b61;
-      transition: background-color 0.3s ease;
-      text-align: center;
-    }
-
-    .modern-navbar .nav-links a:hover {
-      background-color: #2c3e50;
-    }
-
-    #logout {
-      background-color: #991818;
-    }
-
-    #logout:hover {
-      background-color: #bb2121;
-    }
-
-    /* Welcome Section */
-    .welcome {
-      text-align: center;
-      padding: 20px;
-      background-color: #ecf0f1;
-      border-bottom: 1px solid #dcdcdc;
-    }
-
-    .welcome h1 {
-      margin: 0;
-      font-size: 2em;
-      color: #2c3e50;
-    }
-
-    /* Container Styles */
+    /* ── Layout ── */
     .container {
       display: flex;
-      gap: 150px;
-      padding: 20px;
+      gap: 24px;
+      padding: 24px 28px;
+      align-items: flex-start;
     }
 
     .column1 {
-      width: 340px;
-      padding-left: 20px;
-      padding-bottom: 20px;
+      width: 300px;
+      flex-shrink: 0;
       display: flex;
       flex-direction: column;
-      gap: 20px;
-      border-radius: 25px;
-      background-color: #e7e7e7;
-      border: 0.01px solid rgba(0, 0, 0, 0.2);
+      gap: 14px;
     }
 
-    .column1 h1 {
+    .column1 h1, .column2 h1 {
+      font-size: 0.72em;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
       text-align: center;
-      margin-bottom: 10px;
+      margin-bottom: 4px;
+      padding: 0 0 10px;
+      border-bottom: 1px solid var(--border);
     }
 
     .column2 {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 20px;
-    }
-
-    .column2 h1 {
-      text-align: center;
-      margin-bottom: 10px;
+      gap: 14px;
     }
 
     .templategap {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
     }
 
     .othervms {
-      display : flex;
+      display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 18px;
     }
 
+    /* ── VM Cards ── */
     .card {
       position: relative;
-      width: 300px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      background-color: white;
+      width: 290px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface-card);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
       overflow: hidden;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      padding: 10px;
+      padding: 18px 18px 14px;
       display: flex;
       flex-direction: column;
+      transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+      animation: fadeSlideUp 0.4s var(--ease) both;
+    }
+
+    .card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: var(--radius) var(--radius) 0 0;
+      opacity: 0;
+      transition: opacity var(--transition);
     }
 
     .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+      transform: translateY(-4px);
+      border-color: var(--border-hover);
+      box-shadow: 0 24px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(99,102,241,0.2);
     }
 
-    .card a {
-      text-decoration: none;
-      color: inherit;
-      display: block;
-      padding: 20px;
-    }
+    .card:hover::after { opacity: 1; }
 
-    .card p {
-      margin: 0;
-    }
-
-    .card .small {
-      font-size: 0.9em;
-      color: black;
-      font-weight: bold;
-    }
+    .card p { margin: 0; }
 
     #vmName {
       text-align: center;
+      font-size: 0.98em;
+      font-weight: 700;
+      margin-bottom: 10px !important;
+      letter-spacing: -0.01em;
     }
 
     #vmState {
-      margin-bottom: 5px;
-      margin-left: 15px;
+      display: flex;
+      align-items: center;
+      font-size: 0.83em;
+      margin-bottom: 8px;
+      margin-left: 0;
     }
 
-    #vmCharacteristics {
-      margin-left: 15px;
-    }
+    #vmCharacteristics { margin-left: 0; }
 
     .characteristics {
       display: grid;
-      grid-template-columns: auto auto; /* Deux colonnes pour aligner les éléments */
-      column-gap: 5px; /* Espacement horizontal entre les colonnes */
-      row-gap: 5px; /* Espacement vertical entre les lignes */
-      font-size: 0.9em; /* Ajuster la taille si nécessaire */
-      line-height: 1.2; /* Espacement entre les lignes pour améliorer la lisibilité */
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 10px;
+      font-size: 0.8em;
+      padding: 10px 0 6px;
+      border-top: 1px solid rgba(255,255,255,0.07);
     }
 
     .characteristics div {
       display: flex;
-      justify-content: flex-start; /* Ajuste l'espacement entre le label et la valeur */
+      flex-direction: column;
       gap: 2px;
-      font-weight: bold;
     }
 
+    .characteristics div strong {
+      font-size: 0.73em;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .characteristics div span { color: var(--accent2); font-weight: 600; }
+
+    /* ── Tags ── */
     .tag {
-      background:#328bd4;
-      border: none;
-      border-radius: 15px;
-      padding: 0 5px 2px 5px;
-      color: rgb(231, 231, 231);
+      background: rgba(99,102,241,0.18);
+      border: 1px solid rgba(99,102,241,0.3);
+      border-radius: 50px;
+      padding: 1px 8px;
+      color: #a5b4fc;
+      font-size: 0.7em;
+      font-weight: 600;
+      letter-spacing: 0.04em;
     }
 
     .tag.template {
-      background: #8e44ad; /* Couleur violette */
-      color: white; /* Texte en blanc pour un bon contraste */
+      background: rgba(168,85,247,0.18);
+      border-color: rgba(168,85,247,0.3);
+      color: #c4b5fd;
     }
 
+    .card .small { font-size: 0.85em; color: var(--text); font-weight: 500; }
+
+    /* ── Action Buttons ── */
     .actions {
-      margin-top: 10px;
+      margin-top: 12px;
       display: flex;
-      justify-content: space-between; /* Crée un espacement uniforme entre les éléments */
-      align-items: center; /* Aligne les éléments verticalement */
+      justify-content: center;
+      align-items: center;
+      gap: 14px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255,255,255,0.07);
     }
 
     .button {
+      width: 42px;
+      height: 42px;
       background: none;
-      border: none;
+      border: 1px solid var(--border);
+      border-radius: 50%;
       cursor: pointer;
-      padding: 5px;
-      width: 50px; /* Largeur fixe */
-      height: 50px; /* Hauteur fixe */
       display: flex;
       justify-content: center;
-      align-items: center; /* Centrage de l'image */
-      border-radius: 50%; /* Boutons ronds */
-      margin-bottom: 5px;
+      align-items: center;
+      padding: 0;
+      transition: transform var(--transition), box-shadow var(--transition), background var(--transition), border-color var(--transition);
     }
 
-    .button img {
-      width: 80%; /* Ajuster la taille de l'image */
-      height: 80%; /* Ajuster la taille de l'image */
-      object-fit: contain;
-    }
+    .button img { width: 52%; height: 52%; object-fit: contain; }
+    .button img:hover { transform: none; }
 
-    .button img:hover {
+    .button1 {
+      background: rgba(16,185,129,0.15);
+      border-color: rgba(16,185,129,0.3);
+    }
+    .button1:hover {
+      background: rgba(16,185,129,0.3);
+      border-color: rgba(16,185,129,0.6);
+      box-shadow: 0 0 16px rgba(16,185,129,0.3);
       transform: scale(1.1);
     }
 
-    .button1 {
-      background-color: rgb(12, 160, 12);
-      border-radius: 50%;
-      margin-left: 60px;
-    }
-
     .button2 {
-      background-color: rgb(56, 56, 56);
-      border-radius: 50%;
+      background: rgba(244,63,94,0.15);
+      border-color: rgba(244,63,94,0.3);
+    }
+    .button2:hover {
+      background: rgba(244,63,94,0.3);
+      border-color: rgba(244,63,94,0.6);
+      box-shadow: 0 0 16px rgba(244,63,94,0.3);
+      transform: scale(1.1);
     }
 
     .button3 {
-      width: 12px;
-      height: 12px;
-      background-color: #204972;
+      width: 42px;
+      height: 42px;
+      background: rgba(34,211,238,0.12);
+      border: 1px solid rgba(34,211,238,0.3);
       border-radius: 50%;
-      margin-right: 70px;
-      margin-bottom: 5px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform var(--transition), box-shadow var(--transition), background var(--transition);
+      margin: 0;
     }
 
     .button3 img {
-      width: 35px;
-      height: 35px;
-      transform: translate(-11px, -11px);
+      width: 52%;
+      height: 52%;
+      object-fit: contain;
+      transform: none;
     }
 
-    .button3 img:hover {
-      width: 40px;
-      height: 40px;
-      transform: translate(-13px, -13px);
+    .button3:hover {
+      background: rgba(34,211,238,0.25);
+      border-color: rgba(34,211,238,0.6);
+      box-shadow: 0 0 16px rgba(34,211,238,0.3);
+      transform: scale(1.1);
     }
 
-    /* Responsive Styles */
-    @media (max-width: 885px) {
-      .modern-navbar {
-        flex-direction: column; /* Empiler les éléments */
-        align-items: flex-start;
-      }
-
-      .modern-navbar .nav-links {
-        justify-content: flex-start;
-        margin-top: 15px;
-      }
-
-      .modern-navbar .nav-links li {
-        margin-bottom: 15px;
-      }
-
-      .modern-navbar .nav-links a {
-        width: 100%; /* Chaque lien prend toute la largeur disponible */
-      }
-    }
-
-    /* Node Bar */
-    .node-bar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px 30px;
-      background: #fff;
-      border-bottom: 1px solid #dcdcdc;
-      flex-wrap: wrap;
-    }
-    .node-bar-label { font-weight: bold; color: #2c3e50; }
-    .node-tab {
-      padding: 6px 18px;
-      border-radius: 20px;
-      border: 2px solid #328bd4;
-      background: #fff;
-      color: #328bd4;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 0.9em;
-      transition: background 0.2s, color 0.2s;
-    }
-    .node-tab.active  { background: #328bd4; color: #fff; }
-    .node-tab:hover:not(.active) { background: #e8f4fd; }
-    .node-tab.offline { border-color: #e74c3c; color: #e74c3c; }
-    .node-tab.offline.active { background: #e74c3c; color: #fff; }
+    .button3 img:hover { transform: none; width: 52%; height: 52%; }
   </style>
 </head>
 <body>
@@ -559,9 +474,10 @@
             ? '' // Pas d'état pour les templates
             : `
               <p id="vmState" class="state">
-                <strong>État : <span style="color: ${vm.status === 'running' ? 'green' : 'red'};">
+                <span class="status-dot ${vm.status === 'running' ? 'running' : 'stopped'}"></span>
+                <strong style="color:${vm.status === 'running' ? 'var(--success)' : 'var(--danger)'}">
                   ${vm.status === 'running' ? 'Démarrée' : 'Arrêtée'}
-                </span></strong>
+                </strong>
               </p>
             `;
 
@@ -588,16 +504,16 @@
               ${stateHTML}
               <div id="vmCharacteristics" class="characteristics">
                 <div>
-                  <strong>VMID:</strong> <span style="color:#328bd4">${vm.vmid}</span>
+                  <strong>VMID</strong><span>${vm.vmid}</span>
                 </div>
                 <div>
-                  <strong>CPU:</strong> <span style="color:#328bd4;">${vm.maxcpu} coeurs</span>
+                  <strong>CPU</strong><span>${vm.maxcpu} cores</span>
                 </div>
                 <div>
-                  <strong>Memory:</strong> <span style="color:#328bd4">${vm.maxmem} GB</span>
+                  <strong>RAM</strong><span>${vm.maxmem} GB</span>
                 </div>
                 <div>
-                  <strong>Disk:</strong> <span style="color:#328bd4">${vm.maxdisk} GB</span>
+                  <strong>Disk</strong><span>${vm.maxdisk} GB</span>
                 </div>
               </div>
               ${actionsHTML}

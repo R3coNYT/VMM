@@ -1,0 +1,290 @@
+/* ═══════════════════════════════════════════════════════
+   VMM — Glassmorphic Design System (shared)
+   ═══════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ── Variables ─────────────────────────────────────────── */
+:root {
+  --bg:            #08080f;
+  --surface:       rgba(255,255,255,0.06);
+  --surface-hover: rgba(255,255,255,0.10);
+  --surface-card:  rgba(255,255,255,0.05);
+  --border:        rgba(255,255,255,0.10);
+  --border-hover:  rgba(255,255,255,0.22);
+  --accent:        #6366f1;
+  --accent-glow:   rgba(99,102,241,0.35);
+  --accent2:       #22d3ee;
+  --danger:        #f43f5e;
+  --danger-glow:   rgba(244,63,94,0.35);
+  --success:       #10b981;
+  --warning:       #f59e0b;
+  --text:          #e2e8f0;
+  --text-muted:    #94a3b8;
+  --blur:          blur(20px);
+  --radius:        16px;
+  --radius-sm:     10px;
+  --ease:          cubic-bezier(0.4,0,0.2,1);
+  --transition:    0.25s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ── Reset ─────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+/* ── Body & Animated Mesh Background ──────────────────── */
+body {
+  font-family: 'Inter', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 40%, rgba(99,102,241,0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 90% 20%, rgba(34,211,238,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 60% at 55% 90%, rgba(244,63,94,0.08) 0%, transparent 60%);
+  animation: bgBreath 10s ease-in-out infinite alternate;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes bgBreath {
+  from { opacity: 0.5; transform: scale(1); }
+  to   { opacity: 1;   transform: scale(1.06); }
+}
+
+/* ── Navbar ────────────────────────────────────────────── */
+.modern-navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 28px;
+  background: rgba(8,8,15,0.82);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.modern-navbar .logo {
+  font-size: 1.1em;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  flex: 1 1 auto;
+}
+
+.modern-navbar .nav-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.modern-navbar .nav-links li { display: inline; }
+
+.modern-navbar .nav-links a {
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.83em;
+  color: var(--text-muted);
+  padding: 6px 15px;
+  border-radius: 50px;
+  border: 1px solid transparent;
+  transition: color var(--transition), background var(--transition), border-color var(--transition);
+  white-space: nowrap;
+}
+
+.modern-navbar .nav-links a:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+  border-color: var(--border);
+}
+
+#logout {
+  color: var(--danger) !important;
+  border-color: rgba(244,63,94,0.25) !important;
+}
+
+#logout:hover {
+  background: rgba(244,63,94,0.12) !important;
+  border-color: var(--danger) !important;
+  color: var(--danger) !important;
+}
+
+/* ── Node Bar ──────────────────────────────────────────── */
+.node-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 28px;
+  background: rgba(255,255,255,0.025);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.node-bar-label {
+  font-size: 0.74em;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+.node-tab {
+  padding: 4px 16px;
+  border-radius: 50px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 0.8em;
+  transition: background var(--transition), color var(--transition),
+              border-color var(--transition), box-shadow var(--transition);
+}
+
+.node-tab:hover:not(.active) {
+  background: var(--surface-hover);
+  color: var(--text);
+  border-color: var(--border-hover);
+}
+
+.node-tab.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  box-shadow: 0 0 14px var(--accent-glow);
+}
+
+.node-tab.offline { border-color: rgba(244,63,94,0.3); color: var(--danger); }
+.node-tab.offline.active {
+  background: var(--danger);
+  border-color: var(--danger);
+  box-shadow: 0 0 14px var(--danger-glow);
+  color: #fff;
+}
+
+/* ── Welcome Banner ────────────────────────────────────── */
+.welcome {
+  text-align: center;
+  padding: 22px 20px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.welcome h1 {
+  font-size: 1.4em;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+/* ── Form Elements ─────────────────────────────────────── */
+label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.78em;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+input, select {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9em;
+  transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
+  outline: none;
+  box-sizing: border-box;
+}
+
+input::placeholder { color: var(--text-muted); }
+select option      { background: #1a1a2e; color: var(--text); }
+
+input:focus, select:focus {
+  border-color: var(--accent);
+  background: rgba(99,102,241,0.07);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.18);
+}
+
+/* ── Buttons ───────────────────────────────────────────── */
+button {
+  padding: 10px 22px;
+  border: 1px solid transparent;
+  border-radius: 50px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.88em;
+  transition: box-shadow var(--transition), filter var(--transition), transform var(--transition);
+}
+
+button:active { transform: scale(0.97); }
+
+/* ── Animations ────────────────────────────────────────── */
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Status Dot ────────────────────────────────────────── */
+.status-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.status-dot.running {
+  background: var(--success);
+  animation: pulseGreen 2s ease-in-out infinite;
+}
+
+.status-dot.stopped { background: var(--danger); }
+
+@keyframes pulseGreen {
+  0%   { box-shadow: 0 0 0 0   rgba(16,185,129,0.5); }
+  70%  { box-shadow: 0 0 0 6px rgba(16,185,129,0);   }
+  100% { box-shadow: 0 0 0 0   rgba(16,185,129,0);   }
+}
+
+/* ── Feedback Messages ─────────────────────────────────── */
+.error-message   { color: var(--danger);  text-align: center; margin-top: 12px; font-size: 0.88em; }
+.success-message { color: var(--success); text-align: center; margin-top: 12px; font-size: 0.88em; }
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 885px) {
+  .modern-navbar { flex-direction: column; align-items: flex-start; }
+  .modern-navbar .nav-links { justify-content: flex-start; margin-top: 8px; }
+}
