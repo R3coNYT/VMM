@@ -4,7 +4,7 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* ── Variables ─────────────────────────────────────────── */
+/* ── Variables — Dark (default) ────────────────────────── */
 :root {
   --bg:            #08080f;
   --surface:       rgba(255,255,255,0.06);
@@ -12,6 +12,7 @@
   --surface-card:  rgba(255,255,255,0.05);
   --border:        rgba(255,255,255,0.10);
   --border-hover:  rgba(255,255,255,0.22);
+  --navbar-bg:     rgba(8,8,15,0.82);
   --accent:        #6366f1;
   --accent-glow:   rgba(99,102,241,0.35);
   --accent2:       #22d3ee;
@@ -27,6 +28,28 @@
   --ease:          cubic-bezier(0.4,0,0.2,1);
   --transition:    0.25s cubic-bezier(0.4,0,0.2,1);
 }
+
+/* ── Variables — Light ─────────────────────────────────── */
+[data-theme="light"] {
+  --bg:            #f0f2f8;
+  --surface:       rgba(255,255,255,0.70);
+  --surface-hover: rgba(255,255,255,0.90);
+  --surface-card:  rgba(255,255,255,0.65);
+  --border:        rgba(0,0,0,0.10);
+  --border-hover:  rgba(99,102,241,0.35);
+  --navbar-bg:     rgba(240,242,248,0.88);
+  --text:          #1e1e2e;
+  --text-muted:    #64748b;
+}
+
+[data-theme="light"] body::before {
+  background:
+    radial-gradient(ellipse 80% 60% at 10% 40%, rgba(99,102,241,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 90% 20%, rgba(34,211,238,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 60% at 55% 90%, rgba(244,63,94,0.04) 0%, transparent 60%);
+}
+
+[data-theme="light"] select option { background: #fff; color: #1e1e2e; }
 
 /* ── Reset ─────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
@@ -68,7 +91,7 @@ body::before {
   justify-content: space-between;
   align-items: center;
   padding: 10px 28px;
-  background: rgba(8,8,15,0.82);
+  background: var(--navbar-bg);
   backdrop-filter: var(--blur);
   -webkit-backdrop-filter: var(--blur);
   border-bottom: 1px solid var(--border);
@@ -288,3 +311,32 @@ button:active { transform: scale(0.97); }
   .modern-navbar { flex-direction: column; align-items: flex-start; }
   .modern-navbar .nav-links { justify-content: flex-start; margin-top: 8px; }
 }
+
+/* ── Theme Toggle Button ───────────────────────────────── */
+#theme-toggle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1em;
+  flex-shrink: 0;
+  padding: 0;
+  transition: background var(--transition), border-color var(--transition),
+              color var(--transition), box-shadow var(--transition), transform var(--transition);
+}
+
+#theme-toggle:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-hover);
+  color: var(--text);
+  box-shadow: 0 0 10px var(--accent-glow);
+  transform: rotate(20deg) scale(1.1);
+}
+
+#theme-toggle:active { transform: scale(0.95); }

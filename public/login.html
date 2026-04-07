@@ -6,6 +6,13 @@
   <title>VMM — Connexion</title>
   <link rel="icon" type="image/x-icon" href="./VMM.ico">
   <link rel="stylesheet" href="./style.css">
+  <!-- Apply saved theme before render to avoid flash -->
+  <script>
+    (function(){
+      var t = localStorage.getItem('vmm-theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
   <style>
     body {
       display: flex;
@@ -140,6 +147,27 @@
         }
       }
     });
+  </script>
+  <script>
+    /* Theme toggle sur la page login */
+    (function(){
+      function getIcon(t){ return t === 'light' ? '🌙' : '☀️'; }
+      var current = localStorage.getItem('vmm-theme') || 'dark';
+      var btn = document.createElement('button');
+      btn.id = 'theme-toggle';
+      btn.title = 'Changer de thème';
+      btn.textContent = getIcon(current);
+      btn.style.position = 'fixed';
+      btn.style.top = '16px';
+      btn.style.right = '16px';
+      btn.addEventListener('click', function(){
+        current = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', current);
+        localStorage.setItem('vmm-theme', current);
+        btn.textContent = getIcon(current);
+      });
+      document.body.appendChild(btn);
+    })();
   </script>
 </body>
 </html>
