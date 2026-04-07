@@ -38,28 +38,30 @@ echo "    ╚═══╝  ╚═╝     ╚═╝╚═╝     ╚═╝"
 echo -e "${COLOR_WHITE}   Virtual Machine Manager — Installer${COLOR_RESET}"
 echo ""
 
-# ── Vérification des prérequis ────────────────────────────────────────────────
-log "Vérification des prérequis..."
+# ── Installation des prérequis ───────────────────────────────────────────────
+log "Vérification et installation des prérequis..."
 
-if ! command -v node &>/dev/null; then
-    err "Node.js n'est pas installé."
-    warn "  sudo apt install nodejs npm"
-    exit 1
-fi
-ok "Node.js $(node --version) détecté"
-
-if ! command -v npm &>/dev/null; then
-    err "npm n'est pas disponible."
-    exit 1
-fi
-ok "npm v$(npm --version) détecté"
-
+# OpenSSL
 if ! command -v openssl &>/dev/null; then
-    err "OpenSSL n'est pas installé."
-    warn "  sudo apt install openssl"
-    exit 1
+    log "Installation d'OpenSSL..."
+    apt-get install -y openssl
 fi
 ok "$(openssl version) détecté"
+
+# Node.js + npm
+if ! command -v node &>/dev/null || ! command -v npm &>/dev/null; then
+    log "Installation de Node.js et npm..."
+    apt-get update -qq
+    apt-get install -y nodejs npm
+fi
+ok "Node.js $(node --version) / npm v$(npm --version) détectés"
+
+# pm2
+if ! command -v pm2 &>/dev/null; then
+    log "Installation de pm2..."
+    npm install -g pm2
+fi
+ok "pm2 $(pm2 --version) détecté"
 echo ""
 
 # ── Détection des interfaces réseau ──────────────────────────────────────────
@@ -168,14 +170,36 @@ echo ""
 log "Installation des dépendances npm..."
 cd "$SCRIPT_DIR"
 npm install
+
+# ── Lancement avec pm2 ───────────────────────────────────────────────────────
+echo ""
+log "Lancement de l'application avec pm2..."
+
+# Si une instance VMM tourne déjà on la redémarre, sinon on démarre
+if pm2 describe VMM &>/dev/null; then
+    pm2 restart VMM
+    ok "VMM redémarré via pm2"
+else
+    pm2 start app.js --name VMM
+    ok "VMM démarré via pm2"
+fi
+
+# Sauvegarde de la liste pm2 pour redémarrage automatique au boot
+pm2 save
+log "Activation du démarrage automatique au boot (pm2 startup)..."
+pm2 startup systemd -u root --hp /root | tail -1 | bash || \
+    warn "Commande pm2 startup : lancez manuellement la commande affichée ci-dessus si nécessaire."
 echo ""
 
 # ── Résumé ────────────────────────────────────────────────────────────────────
 echo -e "${COLOR_GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${COLOR_RESET}"
 ok "Installation terminée avec succès !"
 echo ""
-echo -e "  ${COLOR_WHITE}Pour lancer l'application :${COLOR_RESET}"
-echo -e "  ${COLOR_CYAN}  node app.js${COLOR_RESET}"
+echo -e "  ${COLOR_WHITE}Gérer l'application :${COLOR_RESET}"
+echo -e "  ${COLOR_CYAN}  pm2 status${COLOR_RESET}           — état"
+echo -e "  ${COLOR_CYAN}  pm2 logs VMM${COLOR_RESET}         — logs en direct"
+echo -e "  ${COLOR_CYAN}  pm2 restart VMM${COLOR_RESET}      — redémarrer"
+echo -e "  ${COLOR_CYAN}  pm2 stop VMM${COLOR_RESET}         — arrêter"
 echo ""
 echo -e "  ${COLOR_WHITE}Interface HTTPS :${COLOR_RESET}"
 echo -e "  ${COLOR_CYAN}  https://$SELECTED_IP:4000${COLOR_RESET}"
