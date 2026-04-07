@@ -1,17 +1,17 @@
 # VMM — Virtual Machine Manager
 
-Interface web Node.js pour gérer des machines virtuelles Proxmox VE.  
-Supporte plusieurs nodes, gestion des VMs (démarrage, arrêt, clone, création, suppression), accès console VNC et monitoring CPU/RAM en temps réel.
+Node.js web interface for managing Proxmox VE virtual machines.  
+Supports multiple nodes, VM management (start, stop, clone, create, delete), VNC console access, and real-time CPU/RAM monitoring.
 
 ---
 
-## Prérequis
+## Requirements
 
-- Proxmox VE accessible en réseau
-- Debian/Proxmox comme OS hôte pour le serveur Node.js
+- Proxmox VE reachable on the network
+- Debian/Proxmox as the host OS for the Node.js server
 - Git
 
-> Node.js, npm, OpenSSL et pm2 sont installés automatiquement par `install.sh` si absents.
+> Node.js, npm, OpenSSL and pm2 are installed automatically by `install.sh` if missing.
 
 ---
 
@@ -22,114 +22,114 @@ curl -fsSL https://raw.githubusercontent.com/R3coNYT/VMM/main/install.sh -o inst
 chmod +x install.sh && sudo ./install.sh
 ```
 
-Le script d'installation :
-1. Installe automatiquement les dépendances système (`git`, `nodejs`, `npm`, `openssl`) si absentes
-2. Installe **pm2** globalement via npm
-3. Clone le projet dans `/opt/vmm`
-4. Liste les interfaces réseau disponibles et demande laquelle utiliser
-5. Génère le fichier de configuration `/opt/vmm/vmm.conf` avec l'IP choisie
-6. Génère les certificats SSL auto-signés dans `/opt/vmm` (`cert.pem` / `key.pem`, RSA 4096, 365 jours)
-7. Lance `npm install` pour les dépendances applicatives
-8. Démarre l'application via pm2 sous le nom **VMM**
-9. Configure le démarrage automatique au boot (`pm2 startup`)
+The install script:
+1. Automatically installs system dependencies (`git`, `nodejs`, `npm`, `openssl`) if missing
+2. Installs **pm2** globally via npm
+3. Clones the project into `/opt/vmm`
+4. Lists available network interfaces and asks which one to use
+5. Generates `/opt/vmm/vmm.conf` with the chosen IP
+6. Generates self-signed SSL certificates in `/opt/vmm` (`cert.pem` / `key.pem`, RSA 4096, 365 days)
+7. Runs `npm install` for application dependencies
+8. Starts the application via pm2 under the name **VMM**
+9. Configures auto-start at boot (`pm2 startup`)
 
 ---
 
 ## Configuration — `vmm.conf`
 
-Créé automatiquement par `install.sh`. Ne pas versionner (exclus via `.gitignore`).
+Created automatically by `install.sh`. Do not commit this file (excluded via `.gitignore`).
 
 ```ini
-# Adresse IP de la machine hôte Proxmox
+# IP address of the Proxmox host machine
 IP=192.168.1.x
 
-# Port HTTPS de l'interface web
+# HTTPS port for the web interface
 PORT=4000
 ```
 
 ---
 
-## Mise à jour
+## Update
 
 ```bash
 sudo /opt/vmm/update.sh
 ```
 
-Le script de mise à jour :
-- Vérifie s'il y a des commits distants disponibles
-- Affiche la liste des nouveaux commits avant d'appliquer
-- Avertit si des fichiers locaux sont modifiés (hors `vmm.conf` et `*.pem`)
-- Lance `npm install` si `package.json` a changé
-- Redémarre automatiquement VMM via pm2
+The update script:
+- Checks whether remote commits are available
+- Displays the list of new commits before applying
+- Warns if local files have been modified (excluding `vmm.conf` and `*.pem`)
+- Runs `npm install` if `package.json` has changed
+- Automatically restarts VMM via pm2
 
 ---
 
-## Gestion de l'application (pm2)
+## Application management (pm2)
 
 ```bash
-pm2 status              # état de VMM
-pm2 logs VMM            # logs en direct
-pm2 restart VMM         # redémarrer
-pm2 stop VMM            # arrêter
+pm2 status              # VMM status
+pm2 logs VMM            # live logs
+pm2 restart VMM         # restart
+pm2 stop VMM            # stop
 ```
 
 ---
 
-## Fonctionnalités
+## Features
 
 | Page | Description |
 |---|---|
-| `/dashboard` | Tableau de bord — liste des VMs par node avec monitoring en temps réel |
-| `/clone-vm` | Cloner une VM depuis un template |
-| `/new-vm` | Créer une nouvelle VM |
-| `/del-vm` | Supprimer une VM |
+| `/dashboard` | Dashboard — VM list per node with real-time monitoring |
+| `/clone-vm` | Clone a VM from a template |
+| `/new-vm` | Create a new VM |
+| `/del-vm` | Delete a VM |
 
-### Tableau de bord
-- Cartes par VM avec statut (démarrée / arrêtée), VMID, CPU, RAM, Disk
-- **Barres d'utilisation temps réel** (CPU et RAM en %) sur chaque VM active — rafraîchissement automatique toutes les 5 secondes sans rechargement de page
-- Boutons d'action : démarrer, arrêter, ouvrir la console VNC (noVNC)
+### Dashboard
+- Per-VM cards showing status (running / stopped), VMID, CPU, RAM, Disk
+- **Real-time usage bars** (CPU and RAM in %) on each running VM — automatic refresh every 5 seconds without page reload
+- Action buttons: start, stop, open VNC console (noVNC)
 
-### Multi-nodes
-Une barre de sélection de nodes est présente sur chaque page.  
-Le node sélectionné est mémorisé dans `sessionStorage` et partagé entre les pages.  
-Les VMs, ISOs, storages et actions (start/stop/delete/clone/create) ciblent dynamiquement le node actif.
+### Multi-node
+A node selection bar is available on every page.  
+The selected node is stored in `sessionStorage` and shared across pages.  
+VMs, ISOs, storages and all actions (start/stop/delete/clone/create) dynamically target the active node.
 
-### Thème clair / sombre
-Bascule persistante via `localStorage` — pas de flash au chargement.  
-Le bouton de bascule est injecté automatiquement dans la navbar sur toutes les pages authentifiées.
+### Light / Dark theme
+Persistent toggle via `localStorage` — no flash on load.  
+The toggle button is automatically injected into the navbar on all authenticated pages.
 
-### Accès
-- **HTTPS** : `https://<IP>:4000`
-- Redirection automatique HTTP → HTTPS sur le port 80
+### Access
+- **HTTPS**: `https://<IP>:4000`
+- Automatic HTTP → HTTPS redirect on port 80
 
 ---
 
 ## Structure
 
 ```
-VMM/          ← dépôt git (sources)
-/opt/vmm/                 ← répertoire d'installation
-├── app.js              # Serveur Express — API backend
-├── vmm.conf            # Configuration locale (ignoré par git)
-├── cert.pem / key.pem  # Certificats SSL (ignorés par git)
-├── install.sh          # Script d'installation
-├── update.sh           # Script de mise à jour
+VMM/                      ← git repository (sources)
+/opt/vmm/                 ← installation directory
+├── app.js              # Express server — backend API
+├── vmm.conf            # Local config (git-ignored)
+├── cert.pem / key.pem  # SSL certificates (git-ignored)
+├── install.sh          # Installation script
+├── update.sh           # Update script
 ├── package.json
 └── public/
-    ├── style.css       # Design system commun (thème glassmorphic dark/light)
-    ├── index.html      # Dashboard + monitoring CPU/RAM
+    ├── style.css       # Shared design system (glassmorphic dark/light theme)
+    ├── index.html      # Dashboard + CPU/RAM monitoring
     ├── clone_vm.html
     ├── new_vm.html
     ├── del_vm.html
     ├── login.html
-    └── logout.js       # Déconnexion + injection bascule thème
+    └── logout.js       # Logout + theme toggle injection
 ```
 
 ---
 
-## Sécurité
+## Security
 
-- Authentification déléguée à l'API Proxmox (tickets PVE)
-- Les credentials sont stockés en cookie `HttpOnly` + `Secure` + `SameSite=Strict`
-- Les certificats SSL sont auto-signés — ajoutez une exception dans votre navigateur ou remplacez par un certificat signé
-- `vmm.conf` et `*.pem` sont exclus du dépôt git
+- Authentication delegated to the Proxmox API (PVE tickets)
+- Credentials stored in an `HttpOnly` + `Secure` + `SameSite=Strict` cookie
+- SSL certificates are self-signed — add a browser exception or replace with a signed certificate
+- `vmm.conf` and `*.pem` are excluded from the git repository
