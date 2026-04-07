@@ -237,6 +237,24 @@
     }
 
     .button3 img:hover { transform: none; width: 52%; height: 52%; }
+
+    /* ── Mode clair : boutons plus opaques + icônes visibles ── */
+    [data-theme="light"] .button1 {
+      background: rgba(16,185,129,0.22);
+      border-color: rgba(16,185,129,0.55);
+    }
+    [data-theme="light"] .button2 {
+      background: rgba(244,63,94,0.18);
+      border-color: rgba(244,63,94,0.5);
+    }
+    [data-theme="light"] .button3 {
+      background: rgba(34,211,238,0.18);
+      border-color: rgba(34,211,238,0.5);
+    }
+    [data-theme="light"] .button img,
+    [data-theme="light"] .button3 img {
+      filter: invert(1) brightness(0.1);
+    }
   </style>
 </head>
 <body>
