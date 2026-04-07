@@ -453,15 +453,42 @@
         const templateColumn = document.getElementById('templateColumn');
         const otherVmsColumn = document.getElementById('otherVmsColumn');
 
-        templateColumn.innerHTML = '';
-        otherVmsColumn.innerHTML = '';
+        // Carte existantes indexées par vmid
+        const existingCards = {};
+        document.querySelectorAll('.card[data-vmid]').forEach(c => {
+          existingCards[c.dataset.vmid] = c;
+        });
+        const seenVmids = new Set();
 
         filteredVMs.forEach(vm => {
-          const card = document.createElement('div');
-          card.classList.add('card');
+          const vmidStr = String(vm.vmid);
+          seenVmids.add(vmidStr);
 
           const isTemplate = Array.isArray(vm.diskNames) &&
                             vm.diskNames.some(name => typeof name === 'string' && name.startsWith('base-'));
+
+          // Si la carte existe déjà → on met à jour uniquement le statut
+          if (existingCards[vmidStr]) {
+            if (!isTemplate) {
+              const stateEl = existingCards[vmidStr].querySelector('.vm-state');
+              if (stateEl) {
+                const dot   = stateEl.querySelector('.status-dot');
+                const label = stateEl.querySelector('.vm-state-label');
+                const running = vm.status === 'running';
+                if (dot)   dot.className = `status-dot ${running ? 'running' : 'stopped'}`;
+                if (label) {
+                  label.style.color = running ? 'var(--success)' : 'var(--danger)';
+                  label.textContent  = running ? 'Démarrée' : 'Arrêtée';
+                }
+              }
+            }
+            return; // Pas de recréation
+          }
+
+          // Nouvelle carte → on la crée avec animation
+          const card = document.createElement('div');
+          card.classList.add('card');
+          card.dataset.vmid = vmidStr;
 
           const tagsHTML = vm.tags
             ? vm.tags
@@ -471,18 +498,18 @@
             : '';
 
           const stateHTML = isTemplate
-            ? '' // Pas d'état pour les templates
+            ? ''
             : `
-              <p id="vmState" class="state">
+              <p class="vm-state state">
                 <span class="status-dot ${vm.status === 'running' ? 'running' : 'stopped'}"></span>
-                <strong style="color:${vm.status === 'running' ? 'var(--success)' : 'var(--danger)'}">
+                <strong class="vm-state-label" style="color:${vm.status === 'running' ? 'var(--success)' : 'var(--danger)'}">
                   ${vm.status === 'running' ? 'Démarrée' : 'Arrêtée'}
                 </strong>
               </p>
             `;
 
           const actionsHTML = isTemplate
-            ? '' // Pas d'actions pour les templates
+            ? ''
             : `
               <div class="actions">
                 <button class="button button1" onclick="startVM(${vm.vmid}, '${vm.node}')">
@@ -502,7 +529,7 @@
               <p id="vmName"><strong>${vm.name}</strong> ${tagsHTML}</p>
               <br>
               ${stateHTML}
-              <div id="vmCharacteristics" class="characteristics">
+              <div class="characteristics">
                 <div>
                   <strong>VMID</strong><span>${vm.vmid}</span>
                 </div>
@@ -520,15 +547,18 @@
             </div>
           `;
 
-          if (
-            Array.isArray(vm.diskNames) &&
-            vm.diskNames.some(name => typeof name === 'string' && name.startsWith('base-'))
-          ) {
+          if (isTemplate) {
             templateColumn.appendChild(card);
           } else {
             otherVmsColumn.appendChild(card);
           }
         });
+
+        // Supprimer les cartes de VMs qui ne sont plus présentes
+        Object.keys(existingCards).forEach(vmidStr => {
+          if (!seenVmids.has(vmidStr)) existingCards[vmidStr].remove();
+        });
+
       } catch (error) {
           console.error('Erreur lors de la récupération des VMs :', error);
           alert("Une erreur est survenue lors de la récupération des machines virtuelles. Veuillez réessayer.");
