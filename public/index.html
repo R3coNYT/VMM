@@ -255,6 +255,51 @@
     [data-theme="light"] .button3 img {
       filter: invert(1) brightness(0.1);
     }
+
+    /* ── Usage bars (CPU / RAM) ── */
+    .vm-usage {
+      padding: 10px 0 4px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .usage-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .usage-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.68em;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .usage-header span:first-child { color: var(--text-muted); }
+    .usage-header span:last-child  { color: var(--text); font-weight: 700; }
+
+    .usage-bar-track {
+      height: 5px;
+      background: rgba(255,255,255,0.09);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .usage-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.7s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .usage-bar-fill.cpu  { background: linear-gradient(90deg, #6366f1, #a78bfa); }
+    .usage-bar-fill.ram  { background: linear-gradient(90deg, #10b981, #34d399); }
+
+    [data-theme="light"] .usage-bar-track { background: rgba(0,0,0,0.09); }
   </style>
 </head>
 <body>
@@ -500,6 +545,25 @@
                   label.textContent  = running ? 'Démarrée' : 'Arrêtée';
                 }
               }
+              // Mise à jour des barres d'utilisation
+              const usageEl = existingCards[vmidStr].querySelector('.vm-usage');
+              if (usageEl) {
+                const running = vm.status === 'running';
+                usageEl.style.display = running ? '' : 'none';
+                if (running) {
+                  const cpuPct = Math.min(100, Math.round((vm.cpuUsage || 0) * 100));
+                  const ramPct = vm.memMax > 0 ? Math.min(100, Math.round(((vm.memUsed || 0) / vm.memMax) * 100)) : 0;
+                  const ramUsedGB = ((vm.memUsed || 0) / 1073741824).toFixed(1);
+                  const cpuFill  = usageEl.querySelector('.usage-cpu-fill');
+                  const cpuPctEl = usageEl.querySelector('.usage-cpu-pct');
+                  const ramFill  = usageEl.querySelector('.usage-ram-fill');
+                  const ramPctEl = usageEl.querySelector('.usage-ram-pct');
+                  if (cpuFill)  cpuFill.style.width   = cpuPct + '%';
+                  if (cpuPctEl) cpuPctEl.textContent   = cpuPct + '%';
+                  if (ramFill)  ramFill.style.width    = ramPct + '%';
+                  if (ramPctEl) ramPctEl.textContent   = `${ramPct}% · ${ramUsedGB}/${vm.maxmem} GB`;
+                }
+              }
             }
             return; // Pas de recréation
           }
@@ -543,6 +607,22 @@
               </div>
             `;
 
+          const cpuPct    = Math.min(100, Math.round((vm.cpuUsage || 0) * 100));
+          const ramPct    = vm.memMax > 0 ? Math.min(100, Math.round(((vm.memUsed || 0) / vm.memMax) * 100)) : 0;
+          const ramUsedGB = ((vm.memUsed || 0) / 1073741824).toFixed(1);
+          const usageHTML = isTemplate ? '' : `
+            <div class="vm-usage"${vm.status !== 'running' ? ' style="display:none"' : ''}>
+              <div class="usage-row">
+                <div class="usage-header"><span>CPU</span><span class="usage-cpu-pct">${cpuPct}%</span></div>
+                <div class="usage-bar-track"><div class="usage-bar-fill cpu usage-cpu-fill" style="width:${cpuPct}%"></div></div>
+              </div>
+              <div class="usage-row">
+                <div class="usage-header"><span>RAM</span><span class="usage-ram-pct">${ramPct}% · ${ramUsedGB}/${vm.maxmem} GB</span></div>
+                <div class="usage-bar-track"><div class="usage-bar-fill ram usage-ram-fill" style="width:${ramPct}%"></div></div>
+              </div>
+            </div>
+          `;
+
           card.innerHTML = `
             <div>
               <p id="vmName"><strong>${vm.name}</strong> ${tagsHTML}</p>
@@ -562,6 +642,7 @@
                   <strong>Disk</strong><span>${vm.maxdisk} GB</span>
                 </div>
               </div>
+              ${usageHTML}
               ${actionsHTML}
             </div>
           `;

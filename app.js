@@ -309,6 +309,9 @@ app.get('/vms', async (req, res) => {
         status: vm.status,
         tags: vm.tags,
         diskNames,
+        cpuUsage: vm.cpu || 0,
+        memUsed: vm.mem || 0,
+        memMax: vm.maxmem || 0,
       });
     }
 
