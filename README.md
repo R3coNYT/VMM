@@ -7,8 +7,8 @@ Supports multiple nodes, VM management (start, stop, clone, create, delete), VNC
 
 ## Requirements
 
-- Proxmox VE reachable on the network
-- Debian/Proxmox as the host OS for the Node.js server
+- Proxmox VE
+- Proxmox as the host OS for the Node.js server
 - Git
 
 > Node.js, npm, OpenSSL and pm2 are installed automatically by `install.sh` if missing.
@@ -16,6 +16,8 @@ Supports multiple nodes, VM management (start, stop, clone, create, delete), VNC
 ---
 
 ## Installation
+
+### You have to install VMM on your Proxmox server and on the same network interface (if your proxmox is configured on the "eth0" interface VMM needs to be on the same interface)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/R3coNYT/VMM/main/install.sh -o install.sh
