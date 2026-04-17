@@ -116,7 +116,7 @@
           if (!username || !password) throw new Error('Identifiant ou mot de passe manquant');
         } catch (error) {
           console.error('Erreur lors du décodage du cookie userCredentials :', error);
-          alert('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.');
+          showToast('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.', 'error');
           window.location.href = '/login';
           return;
         }
@@ -164,7 +164,7 @@
       const vmid = vmidSelect.value;
       const vmNode = vmidSelect.selectedOptions[0]?.dataset?.node || '';
 
-      if (!confirm(`Êtes-vous sûr de vouloir supprimer la VM avec VMID ${vmid} ?`)) {
+      if (!await showConfirm(`Êtes-vous sûr de vouloir supprimer la VM avec VMID ${vmid} ?`)) {
         return; // Annuler la suppression si l'utilisateur clique sur "Annuler"
       }
   
@@ -198,7 +198,7 @@
         }
       } catch (error) {
         console.error('Erreur lors du décodage du cookie userCredentials :', error);
-        alert('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.');
+        showToast('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.', 'error');
         window.location.href = '/login';
         return; // Arrêter l'exécution si le cookie est invalide
       }
@@ -229,6 +229,7 @@
       }
     });
   </script>
+  <script src="./toast.js"></script>
   <script src="./logout.js"></script>
 </body>
 </html>

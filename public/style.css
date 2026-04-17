@@ -306,6 +306,181 @@ button:active { transform: scale(0.97); }
 .error-message   { color: var(--danger);  text-align: center; margin-top: 12px; font-size: 0.88em; }
 .success-message { color: var(--success); text-align: center; margin-top: 12px; font-size: 0.88em; }
 
+/* ── Toast Notifications ───────────────────────────────── */
+.toast-container {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast {
+  min-width: 280px;
+  max-width: 380px;
+  background: var(--surface-card);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 13px 16px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: all;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  animation: toastIn 0.35s var(--ease) both;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.toast.leaving {
+  animation: toastOut 0.35s var(--ease) both;
+}
+
+.toast-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.toast-icon {
+  font-size: 1em;
+  flex-shrink: 0;
+  margin-top: 1px;
+  font-weight: 700;
+}
+
+.toast-message {
+  font-size: 0.87em;
+  font-weight: 500;
+  color: var(--text);
+  flex: 1;
+  line-height: 1.45;
+}
+
+.toast-progress {
+  height: 3px;
+  border-radius: 2px;
+  width: 100%;
+  transform-origin: left center;
+}
+
+.toast.success { border-color: rgba(16,185,129,0.4); }
+.toast.success .toast-icon    { color: var(--success); }
+.toast.success .toast-progress { background: var(--success); animation: toastProgress 5s linear both; }
+
+.toast.error   { border-color: rgba(244,63,94,0.4); }
+.toast.error .toast-icon      { color: var(--danger); }
+.toast.error .toast-progress  { background: var(--danger); animation: toastProgress 5s linear both; }
+
+.toast.warning { border-color: rgba(245,158,11,0.4); }
+.toast.warning .toast-icon    { color: var(--warning); }
+.toast.warning .toast-progress { background: var(--warning); animation: toastProgress 5s linear both; }
+
+.toast.info    { border-color: rgba(99,102,241,0.4); }
+.toast.info .toast-icon       { color: var(--accent); }
+.toast.info .toast-progress   { background: var(--accent); animation: toastProgress 5s linear both; }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(24px) scale(0.97); }
+  to   { opacity: 1; transform: translateX(0)    scale(1);    }
+}
+
+@keyframes toastOut {
+  from { opacity: 1; transform: translateX(0)    scale(1);    max-height: 120px; margin-bottom: 0; }
+  to   { opacity: 0; transform: translateX(24px) scale(0.97); max-height: 0;     margin-bottom: -10px; }
+}
+
+@keyframes toastProgress {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
+/* ── Confirm Modal ─────────────────────────────────────── */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease both;
+}
+
+.confirm-modal {
+  background: var(--surface-card);
+  border: 1px solid rgba(244,63,94,0.3);
+  border-radius: 20px;
+  padding: 32px 28px 28px;
+  max-width: 380px;
+  width: 90%;
+  text-align: center;
+  animation: fadeSlideUp 0.3s var(--ease) both;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+}
+
+.confirm-modal h3 {
+  font-size: 1.1em;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 10px;
+}
+
+.confirm-modal p {
+  font-size: 0.88em;
+  color: var(--text-muted);
+  margin: 0 0 24px;
+  line-height: 1.55;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.confirm-btn {
+  padding: 10px 26px;
+  border-radius: 50px;
+  border: none;
+  font-size: 0.9em;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: box-shadow var(--transition), filter var(--transition), background var(--transition);
+}
+
+.confirm-btn.cancel {
+  background: var(--surface);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.confirm-btn.cancel:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+  border-color: var(--border-hover);
+}
+
+.confirm-btn.danger {
+  background: var(--danger);
+  color: #fff;
+}
+
+.confirm-btn.danger:hover {
+  box-shadow: 0 0 18px var(--danger-glow);
+  filter: brightness(1.12);
+}
+
 /* ── Responsive ────────────────────────────────────────── */
 @media (max-width: 885px) {
   .modern-navbar { flex-direction: column; align-items: flex-start; }

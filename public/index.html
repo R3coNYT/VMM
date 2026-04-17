@@ -400,7 +400,7 @@
         if (!username || !password) throw new Error('Identifiant ou mot de passe manquant');
       } catch (error) {
         console.error('Erreur lors du décodage du cookie userCredentials :', error);
-        alert('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.');
+        showToast('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.', 'error');
         window.location.href = '/login';
         return;
       }
@@ -495,7 +495,7 @@
           }
         } catch (error) {
           console.error('Erreur lors de la vérification des permissions :', error);
-          alert('Impossible de vérifier les permissions de l\'utilisateur. Veuillez réessayer.');
+          showToast('Impossible de vérifier les permissions de l\'utilisateur. Veuillez réessayer.', 'error');
         }
       }
 
@@ -661,7 +661,7 @@
 
       } catch (error) {
           console.error('Erreur lors de la récupération des VMs :', error);
-          alert("Une erreur est survenue lors de la récupération des machines virtuelles. Veuillez réessayer.");
+          showToast('Une erreur est survenue lors de la récupération des machines virtuelles. Veuillez réessayer.', 'error');
       }
     }
 
@@ -706,7 +706,7 @@
         welcomeElement.innerHTML = `Bienvenue dans votre tableau de bord <span style="color: #328bd4;">${username}</span> !`;
       } catch (error) {
         console.error('Erreur lors du décodage du cookie userCredentials :', error);
-        alert('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.');
+        showToast('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.', 'error');
         window.location.href = '/login';
       }
     });
@@ -734,7 +734,7 @@
         }
       } catch (error) {
         console.error('Erreur lors du décodage du cookie userCredentials :', error);
-        alert('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.');
+        showToast('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.', 'error');
         window.location.href = '/login';
         return; // Arrêter l'exécution si le cookie est invalide
       }
@@ -750,7 +750,7 @@
           throw new Error(`Erreur HTTP ${response.status} : ${response.statusText}`);
         }
 
-        alert(`VM ${vmid} démarrée.`);
+        showToast(`VM ${vmid} démarrée.`, 'success');
         fetchVMs(); // Rafraîchir la liste des VMs
       } catch (error) {
         console.error(`Erreur lors du démarrage de la VM ${vmid}:`, error);
@@ -780,7 +780,7 @@
         }
       } catch (error) {
         console.error('Erreur lors du décodage du cookie userCredentials :', error);
-        alert('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.');
+        showToast('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.', 'error');
         window.location.href = '/login';
         return; // Arrêter l'exécution si le cookie est invalide
       }
@@ -796,7 +796,7 @@
           throw new Error(`Erreur HTTP ${response.status} : ${response.statusText}`);
         }
 
-        alert(`VM ${vmid} arrêtée.`);
+        showToast(`VM ${vmid} arrêtée.`, 'success');
         fetchVMs(); // Rafraîchir la liste des VMs
       } catch (error) {
         console.error(`Erreur lors de l'arrêt de la VM ${vmid}:`, error);
@@ -807,6 +807,7 @@
     loadNodes();
     fetchVMs();
   </script>
+  <script src="./toast.js"></script>
   <script src="./logout.js"></script>
 </body>
 </html>

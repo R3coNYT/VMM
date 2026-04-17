@@ -124,7 +124,7 @@
             if (!username || !password) throw new Error('Identifiant ou mot de passe manquant');
         } catch (error) {
             console.error('Erreur lors du décodage du cookie userCredentials :', error);
-            alert('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.');
+            showToast('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.', 'error');
             window.location.href = '/login';
             return;
         }
@@ -210,6 +210,7 @@
         });
     });
   </script>
+  <script src="./toast.js"></script>
   <script src="./logout.js"></script>
 </body>
 </html>

@@ -218,7 +218,7 @@
             if (!username || !password) throw new Error('Identifiant ou mot de passe manquant');
         } catch (error) {
             console.error('Erreur lors du décodage du cookie userCredentials :', error);
-            alert('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.');
+            showToast('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.', 'error');
             window.location.href = '/login';
             return;
         }
@@ -307,7 +307,7 @@
           const opt = storageSelect.selectedOptions[0];
           const avail = parseFloat(opt?.dataset?.avail || 'NaN');
           if (!isNaN(avail) && parseFloat(diskInput.value) > avail) {
-            alert(`La taille du disque dépasse l'espace libre (${avail} GiB).`);
+            showToast(`La taille du disque dépasse l'espace libre (${avail} GiB).`, 'warning');
             diskInput.value = Math.floor(avail);
           }
         }
@@ -372,20 +372,21 @@
                 });
 
                 if (response.ok) {
-                    alert('VM créée avec succès !');
+                    showToast('VM créée avec succès !', 'success');
                     const result = await response.json();
                     window.location.href = '/dashboard';
                 } else {
                     const errorText = await response.text();
-                    alert(`Erreur lors de la création de la VM : ${errorText}`);
+                    showToast(`Erreur lors de la création de la VM : ${errorText}`, 'error');
                 }
             } catch (error) {
                 console.error('Erreur :', error);
-                alert('Une erreur est survenue lors de la création de la VM.');
+                showToast('Une erreur est survenue lors de la création de la VM.', 'error');
             }
         });
     });
   </script>
+  <script src="./toast.js"></script>
   <script src="./logout.js"></script>
 </body>
 </html>
