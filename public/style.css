@@ -231,7 +231,7 @@ body::before {
 /* ── Welcome Banner ────────────────────────────────────── */
 .welcome {
   text-align: center;
-  padding: 22px 20px 14px;
+  padding: 10px 10px 14px;
   border-bottom: 1px solid var(--border);
 }
 
@@ -240,6 +240,7 @@ body::before {
   font-weight: 600;
   color: var(--text);
   letter-spacing: -0.01em;
+  margin: 0;
 }
 
 /* ── Form Elements ─────────────────────────────────────── */
