@@ -406,6 +406,68 @@ app.post('/vms/:vmid/stop', async (req, res) => {
   }
 });
 
+app.get('/vms/:vmid/config', async (req, res) => {
+  const { vmid } = req.params;
+  const { username, password, node } = req.query;
+  if (!username || !password || !node) {
+    return res.status(400).send('Paramètres manquants.');
+  }
+  try {
+    const authResponse = await axios.post(
+      `https://${IP}:8006/api2/json/access/ticket`,
+      new URLSearchParams({ username, password }),
+      { httpsAgent }
+    );
+    const { ticket, CSRFPreventionToken } = authResponse.data.data;
+    const configResponse = await axios.get(
+      `https://${IP}:8006/api2/json/nodes/${node}/qemu/${vmid}/config`,
+      {
+        headers: { Cookie: `PVEAuthCookie=${ticket}`, CSRFPreventionToken },
+        httpsAgent,
+      }
+    );
+    res.json(configResponse.data.data);
+  } catch (error) {
+    console.error(`Erreur config VM ${vmid}:`, error.response?.data || error.message);
+    res.status(500).send(`Erreur lors de la récupération de la config VM ${vmid}.`);
+  }
+});
+
+app.put('/vms/:vmid/config', async (req, res) => {
+  const { vmid } = req.params;
+  const { username, password, node } = req.query;
+  const updates = req.body;
+  if (!username || !password || !node) {
+    return res.status(400).send('Paramètres manquants.');
+  }
+  try {
+    const authResponse = await axios.post(
+      `https://${IP}:8006/api2/json/access/ticket`,
+      new URLSearchParams({ username, password }),
+      { httpsAgent }
+    );
+    const { ticket, CSRFPreventionToken } = authResponse.data.data;
+    const params = new URLSearchParams();
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, String(value));
+      }
+    });
+    await axios.put(
+      `https://${IP}:8006/api2/json/nodes/${node}/qemu/${vmid}/config`,
+      params,
+      {
+        headers: { Cookie: `PVEAuthCookie=${ticket}`, CSRFPreventionToken },
+        httpsAgent,
+      }
+    );
+    res.status(200).send('Configuration mise à jour avec succès.');
+  } catch (error) {
+    console.error(`Erreur MAJ config VM ${vmid}:`, error.response?.data || error.message);
+    res.status(500).send(`Erreur lors de la mise à jour de la config VM ${vmid}.`);
+  }
+});
+
 app.get('/all-vms', async (req, res) => {
   const { username, password } = req.query;
 

@@ -157,9 +157,16 @@
 
     .card .small { font-size: 0.85em; color: var(--text); font-weight: 500; }
 
+    /* ── Card inner wrapper fills height so buttons stay at the bottom ── */
+    .card > div {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
     /* ── Action Buttons ── */
     .actions {
-      margin-top: 12px;
+      margin-top: auto;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -238,6 +245,23 @@
 
     .button3 img:hover { transform: none; width: 52%; height: 52%; }
 
+    /* ── Bouton Engrenage (Settings) ── */
+    .button0 {
+      background: rgba(148,163,184,0.12);
+      border-color: rgba(148,163,184,0.25);
+      color: var(--text-muted);
+    }
+    .button0:hover {
+      background: rgba(148,163,184,0.25);
+      border-color: rgba(148,163,184,0.55);
+      box-shadow: 0 0 16px rgba(148,163,184,0.18);
+      transform: scale(1.1);
+      color: var(--text);
+    }
+    .button0 svg { transition: transform 0.4s cubic-bezier(0.4,0,0.2,1); }
+    .button0:hover svg { transform: rotate(60deg); }
+    [data-theme="light"] .button0 { background: rgba(100,116,139,0.12); border-color: rgba(100,116,139,0.35); }
+
     /* ── Mode clair : boutons plus opaques + icônes visibles ── */
     [data-theme="light"] .button1 {
       background: rgba(16,185,129,0.22);
@@ -300,6 +324,82 @@
     .usage-bar-fill.ram  { background: linear-gradient(90deg, #10b981, #34d399); }
 
     [data-theme="light"] .usage-bar-track { background: rgba(0,0,0,0.09); }
+
+    /* ── VM Settings Modal ── */
+    .vm-settings-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      z-index: 9990;
+      display: flex; align-items: center; justify-content: center;
+      animation: fadeIn 0.2s ease both;
+    }
+    .vm-settings-modal {
+      background: var(--surface-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      width: 90%; max-width: 520px; max-height: 88vh;
+      display: flex; flex-direction: column;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+      backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+      animation: fadeSlideUp 0.3s var(--ease) both;
+      overflow: hidden;
+    }
+    .vm-settings-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 22px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+    }
+    .vm-settings-header h2 { font-size: 1em; font-weight: 700; color: var(--text); margin: 0; }
+    .vm-settings-close {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 1px solid var(--border); background: var(--surface); color: var(--text-muted);
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 0.8em; padding: 0;
+      transition: background var(--transition), color var(--transition);
+    }
+    .vm-settings-close:hover { background: var(--surface-hover); color: var(--text); }
+    .vm-settings-body {
+      overflow-y: auto; padding: 18px 22px;
+      flex: 1; display: flex; flex-direction: column; gap: 18px;
+    }
+    .settings-section { display: flex; flex-direction: column; gap: 10px; }
+    .settings-section-title {
+      font-size: 0.68em; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.1em;
+      padding-bottom: 7px; border-bottom: 1px solid var(--border); margin: 0;
+    }
+    .settings-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .settings-net-row {
+      display: grid;
+      grid-template-columns: 38px 1fr 80px auto;
+      gap: 8px; align-items: center;
+      padding: 8px 10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+    .settings-net-label {
+      font-size: 0.74em; font-weight: 700; color: var(--text-muted);
+      font-family: 'Courier New', monospace;
+    }
+    .settings-net-toggle {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 0.74em; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.04em;
+      cursor: pointer; white-space: nowrap;
+    }
+    .settings-net-toggle input[type="checkbox"] { width: auto; margin: 0; accent-color: var(--accent); cursor: pointer; }
+    .settings-net-row input[type="text"] { font-size: 0.8em; padding: 7px 8px; }
+    .settings-net-row select { font-size: 0.8em; padding: 7px 8px; }
+    .settings-net-row input:disabled,
+    .settings-net-row select:disabled { opacity: 0.35; cursor: not-allowed; }
+    .vm-settings-footer {
+      display: flex; justify-content: flex-end; gap: 10px;
+      padding: 14px 22px; border-top: 1px solid var(--border); flex-shrink: 0;
+    }
+    .confirm-btn.primary { background: var(--accent); color: #fff; }
+    .confirm-btn.primary:hover { box-shadow: 0 0 18px var(--accent-glow); filter: brightness(1.12); }
+    [data-theme="light"] .settings-net-row { background: rgba(0,0,0,0.03); }
   </style>
 </head>
 <body>
@@ -595,6 +695,9 @@
             ? ''
             : `
               <div class="actions">
+                <button class="button button0" onclick="openVmSettings(${vm.vmid}, '${vm.node}')" title="Paramètres">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.92c.04-.34.07-.68.07-1.08s-.03-.73-.07-1.08l2.32-1.8c.21-.16.27-.45.14-.68l-2.2-3.82c-.13-.23-.42-.3-.65-.22l-2.73 1.1c-.57-.44-1.18-.8-1.85-1.07L14.14 2h-4.28l-.41 2.93c-.67.27-1.28.63-1.85 1.07l-2.73-1.1c-.23-.08-.52 0-.65.22l-2.2 3.82c-.13.23-.07.52.14.68l2.32 1.8c-.04.35-.07.7-.07 1.08s.03.73.07 1.08l-2.32 1.8c-.21.16-.27.45-.14.68l2.2 3.82c.13.23.42.3.65.22l2.73-1.1c.57.44 1.18.8 1.85 1.07l.41 2.93h4.28l.41-2.93c.67-.27 1.28-.63 1.85-1.07l2.73 1.1c.23.08.52 0 .65-.22l2.2-3.82c.13-.23.07-.52-.14-.68l-2.32-1.8z"/></svg>
+                </button>
                 <button class="button button1" onclick="startVM(${vm.vmid}, '${vm.node}')">
                   <img src="./img/start.png" alt="Démarrer">
                 </button>
@@ -806,7 +909,198 @@
     // Charger initialement les nodes et les VMs
     loadNodes();
     fetchVMs();
+
+    // ── VM Settings ───────────────────────────────────────────────
+    let _settingsVmid = null, _settingsNode = null, _settingsOrigNets = {};
+
+    function parseNetConfig(s) {
+      if (!s) return { model: 'virtio', bridge: 'vmbr0', mac: '' };
+      const parts = s.split(',');
+      let model = 'virtio', bridge = 'vmbr0', mac = '';
+      for (const p of parts) {
+        if (p.startsWith('bridge=')) { bridge = p.slice(7); }
+        else if (p.includes('=') && !/^(firewall|link_down|mtu|queues|rate|tag|trunks)=/.test(p)) {
+          const eq = p.indexOf('='); model = p.slice(0, eq); mac = p.slice(eq + 1);
+        }
+      }
+      return { model, bridge, mac };
+    }
+
+    function toggleNet(i) {
+      const on = document.getElementById(`snet${i}-on`).checked;
+      document.getElementById(`snet${i}-model`).disabled = !on;
+      document.getElementById(`snet${i}-bridge`).disabled = !on;
+    }
+
+    async function openVmSettings(vmid, node) {
+      _settingsVmid = vmid; _settingsNode = node;
+      const card = document.querySelector(`.card[data-vmid="${vmid}"]`);
+      const name = card?.querySelector('[id="vmName"] strong')?.textContent || `VM ${vmid}`;
+      document.getElementById('vmsTitle').textContent = `⚙️  ${name} — ID ${vmid}`;
+      document.getElementById('vmsOverlay').style.display = 'flex';
+      try {
+        const [u, pw] = atob(decodeURIComponent(getCookie('userCredentials'))).split(':');
+        const r = await fetch(`/vms/${vmid}/config?username=${encodeURIComponent(u)}&password=${encodeURIComponent(pw)}&node=${encodeURIComponent(node)}`);
+        if (!r.ok) throw new Error();
+        const cfg = await r.json();
+        document.getElementById('sMemory').value  = cfg.memory  || 512;
+        document.getElementById('sCores').value   = cfg.cores   || 1;
+        document.getElementById('sSockets').value = cfg.sockets || 1;
+        document.getElementById('sBios').value    = cfg.bios    || 'seabios';
+        document.getElementById('sScsiHw').value  = cfg.scsihw  || 'lsi';
+        _settingsOrigNets = {};
+        for (let i = 0; i < 4; i++) {
+          const key = `net${i}`, val = cfg[key] || null;
+          _settingsOrigNets[key] = val;
+          const p = parseNetConfig(val);
+          const on = !!val;
+          document.getElementById(`snet${i}-on`).checked = on;
+          document.getElementById(`snet${i}-model`).value    = p.model;
+          document.getElementById(`snet${i}-model`).disabled  = !on;
+          document.getElementById(`snet${i}-bridge`).value   = p.bridge;
+          document.getElementById(`snet${i}-bridge`).disabled = !on;
+        }
+      } catch(e) {
+        showToast('Erreur lors du chargement de la configuration.', 'error');
+        closeVmSettings();
+      }
+    }
+
+    function closeVmSettings() {
+      document.getElementById('vmsOverlay').style.display = 'none';
+      _settingsVmid = null; _settingsNode = null;
+    }
+
+    async function saveVmSettings() {
+      if (!_settingsVmid || !_settingsNode) return;
+      try {
+        const [u, pw] = atob(decodeURIComponent(getCookie('userCredentials'))).split(':');
+        const updates = {
+          memory:  document.getElementById('sMemory').value,
+          cores:   document.getElementById('sCores').value,
+          sockets: document.getElementById('sSockets').value,
+          bios:    document.getElementById('sBios').value,
+          scsihw:  document.getElementById('sScsiHw').value,
+        };
+        const toDelete = [];
+        for (let i = 0; i < 4; i++) {
+          const on  = document.getElementById(`snet${i}-on`).checked;
+          const mdl = document.getElementById(`snet${i}-model`).value;
+          const br  = document.getElementById(`snet${i}-bridge`).value;
+          const orig = _settingsOrigNets[`net${i}`];
+          if (on) {
+            const mac = parseNetConfig(orig).mac;
+            updates[`net${i}`] = mac ? `${mdl}=${mac},bridge=${br}` : `${mdl},bridge=${br}`;
+          } else if (orig) {
+            toDelete.push(`net${i}`);
+          }
+        }
+        if (toDelete.length) updates['delete'] = toDelete.join(',');
+        const r = await fetch(`/vms/${_settingsVmid}/config?username=${encodeURIComponent(u)}&password=${encodeURIComponent(pw)}&node=${encodeURIComponent(_settingsNode)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updates),
+        });
+        if (r.ok) {
+          showToast('Configuration mise à jour avec succès !', 'success');
+          closeVmSettings();
+        } else {
+          showToast(`Erreur : ${await r.text()}`, 'error');
+        }
+      } catch(e) {
+        showToast('Erreur lors de la sauvegarde.', 'error');
+      }
+    }
   </script>
+
+  <!-- ── VM Settings Modal ── -->
+  <div id="vmsOverlay" class="vm-settings-overlay" style="display:none" onclick="if(event.target===this)closeVmSettings()">
+    <div class="vm-settings-modal">
+      <div class="vm-settings-header">
+        <h2 id="vmsTitle">⚙️ Settings</h2>
+        <button class="vm-settings-close" onclick="closeVmSettings()">&#10005;</button>
+      </div>
+      <div class="vm-settings-body">
+        <div class="settings-section">
+          <p class="settings-section-title">Mémoire</p>
+          <div class="form-group">
+            <label for="sMemory">RAM (MiB)</label>
+            <input type="number" id="sMemory" min="256" step="256">
+          </div>
+        </div>
+        <div class="settings-section">
+          <p class="settings-section-title">Processeur</p>
+          <div class="settings-row">
+            <div class="form-group">
+              <label for="sCores">Coeurs</label>
+              <input type="number" id="sCores" min="1" max="128">
+            </div>
+            <div class="form-group">
+              <label for="sSockets">Sockets</label>
+              <input type="number" id="sSockets" min="1" max="4">
+            </div>
+          </div>
+        </div>
+        <div class="settings-section">
+          <p class="settings-section-title">Système</p>
+          <div class="settings-row">
+            <div class="form-group">
+              <label for="sBios">BIOS</label>
+              <select id="sBios">
+                <option value="seabios">SeaBIOS</option>
+                <option value="ovmf">OVMF (UEFI)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="sScsiHw">Contrôleur SCSI</label>
+              <select id="sScsiHw">
+                <option value="lsi">LSI 53C895A</option>
+                <option value="lsi53c810">LSI 53C810</option>
+                <option value="virtio-scsi-pci">VirtIO SCSI</option>
+                <option value="virtio-scsi-single">VirtIO SCSI Single</option>
+                <option value="megasas">MegaRAID SAS</option>
+                <option value="pvscsi">VMware PVSCSI</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="settings-section">
+          <p class="settings-section-title">Cartes réseau</p>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div class="settings-net-row">
+              <span class="settings-net-label">net0</span>
+              <select id="snet0-model"><option value="virtio">VirtIO</option><option value="e1000">Intel E1000</option><option value="rtl8139">Realtek RTL8139</option><option value="vmxnet3">vmxnet3</option></select>
+              <input type="text" id="snet0-bridge" placeholder="vmbr0">
+              <label class="settings-net-toggle"><input type="checkbox" id="snet0-on" onchange="toggleNet(0)"> Active</label>
+            </div>
+            <div class="settings-net-row">
+              <span class="settings-net-label">net1</span>
+              <select id="snet1-model"><option value="virtio">VirtIO</option><option value="e1000">Intel E1000</option><option value="rtl8139">Realtek RTL8139</option><option value="vmxnet3">vmxnet3</option></select>
+              <input type="text" id="snet1-bridge" placeholder="vmbr0">
+              <label class="settings-net-toggle"><input type="checkbox" id="snet1-on" onchange="toggleNet(1)"> Active</label>
+            </div>
+            <div class="settings-net-row">
+              <span class="settings-net-label">net2</span>
+              <select id="snet2-model"><option value="virtio">VirtIO</option><option value="e1000">Intel E1000</option><option value="rtl8139">Realtek RTL8139</option><option value="vmxnet3">vmxnet3</option></select>
+              <input type="text" id="snet2-bridge" placeholder="vmbr0">
+              <label class="settings-net-toggle"><input type="checkbox" id="snet2-on" onchange="toggleNet(2)"> Active</label>
+            </div>
+            <div class="settings-net-row">
+              <span class="settings-net-label">net3</span>
+              <select id="snet3-model"><option value="virtio">VirtIO</option><option value="e1000">Intel E1000</option><option value="rtl8139">Realtek RTL8139</option><option value="vmxnet3">vmxnet3</option></select>
+              <input type="text" id="snet3-bridge" placeholder="vmbr0">
+              <label class="settings-net-toggle"><input type="checkbox" id="snet3-on" onchange="toggleNet(3)"> Active</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="vm-settings-footer">
+        <button class="confirm-btn cancel" onclick="closeVmSettings()">Annuler</button>
+        <button class="confirm-btn primary" onclick="saveVmSettings()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
   <script src="./toast.js"></script>
   <script src="./logout.js"></script>
 </body>
