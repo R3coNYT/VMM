@@ -79,11 +79,18 @@
         <div class="delete-vm-container">
             <h2>Delete a VM</h2>
             <form id="deleteVmForm">
-              <label for="vmid">Select a VM</label>
-              <select id="vmid" required>
-                <option value="" disabled selected>Loading VMs...</option>
-              </select>
-              <br>
+              <div class="form-group">
+                <label for="nodeFilter">Node</label>
+                <select id="nodeFilter">
+                  <option value="">All nodes</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="vmid">Select a VM</label>
+                <select id="vmid" required>
+                  <option value="" disabled selected>Loading VMs...</option>
+                </select>
+              </div>
               <button type="submit">Delete</button>
             </form>
             <div id="result"></div>
@@ -91,14 +98,27 @@
     </div>
 
   <script>
+    let allDeletableVMs = [];
+
+    function renderVMSelect(nodeFilter) {
+      const vmidSelect = document.getElementById('vmid');
+      const list = nodeFilter ? allDeletableVMs.filter(vm => vm.node === nodeFilter) : allDeletableVMs;
+      if (list.length === 0) {
+        vmidSelect.innerHTML = `<option value="" disabled selected>No VMs on this node</option>`;
+      } else {
+        vmidSelect.innerHTML = list
+          .map(vm => `<option value="${vm.vmid}" data-node="${vm.node || ''}">ID: ${vm.vmid} - ${vm.name} (${vm.node})</option>`)
+          .join('');
+      }
+    }
+
     async function fetchVMs() {
       const vmidSelect = document.getElementById('vmid');
+      const nodeFilter = document.getElementById('nodeFilter');
       try {
-        // Fonction pour récupérer les cookies
         function getCookie(name) {
           const value = `; ${document.cookie}`;
           const parts = value.split(`; ${name}=`);
-
           if (parts.length === 2) return parts.pop().split(';').shift();
           return null;
         }
@@ -108,53 +128,45 @@
         try {
           const userCredentials = getCookie('userCredentials');
           if (!userCredentials) throw new Error('Cookie userCredentials introuvable');
-
           const decodedUrl = decodeURIComponent(userCredentials);
           const decodedCredentials = atob(decodedUrl);
-
           [username, password] = decodedCredentials.split(':');
           if (!username || !password) throw new Error('Identifiant ou mot de passe manquant');
         } catch (error) {
-          console.error('Erreur lors du décodage du cookie userCredentials :', error);
           showToast('Authentication cookie error. Please log in again.', 'error');
           window.location.href = '/login';
           return;
         }
 
-        // Fetch VMs
         const response = await fetch(`/all-vms?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`);
-        if (!response.ok) throw new Error('Erreur lors de la récupération des VMs.');
-
+        if (!response.ok) throw new Error('Failed to fetch VMs');
         const vms = await response.json();
 
-        if (vms.length === 0) {
-          vmidSelect.innerHTML = `<option value="" disabled>No VMs available</option>`;
-          return;
-        }
-
-        // Filtrer les VMs pour exclure celles ayant les tags 'template' ou 'perso'
-        const filteredVMs = vms.filter(vm => {
-          const tags = vm.tags ? vm.tags.split(';').map(tag => tag.trim().toLowerCase()) : [];
+        // Exclude templates and personal VMs
+        allDeletableVMs = vms.filter(vm => {
+          const tags = vm.tags ? vm.tags.split(';').map(t => t.trim().toLowerCase()) : [];
           return !tags.includes('template') && !tags.includes('perso');
         });
 
-        // Ajouter les options au select
-        if (filteredVMs.length === 0) {
-          vmidSelect.innerHTML = `<option value="" disabled>No VMs available (excluding templates and personal)</option>`;
-        } else {
-          vmidSelect.innerHTML = filteredVMs
-            .map(vm => `<option value="${vm.vmid}" data-node="${vm.node || ''}">ID: ${vm.vmid} - Nom: ${vm.name}</option>`)
-            .join('');
-        }
+        // Populate node filter
+        const nodes = [...new Set(allDeletableVMs.map(vm => vm.node).filter(Boolean))].sort();
+        nodes.forEach(n => {
+          const opt = document.createElement('option');
+          opt.value = n;
+          opt.textContent = n;
+          nodeFilter.appendChild(opt);
+        });
+
+        renderVMSelect('');
       } catch (error) {
-        console.error('Erreur lors de la récupération des VMs :', error);
+        console.error('Error fetching VMs:', error);
         vmidSelect.innerHTML = `<option value="" disabled>Loading error</option>`;
       }
     }
 
-    // Charger les VMs dès le chargement de la page
     document.addEventListener('DOMContentLoaded', () => {
       fetchVMs();
+      document.getElementById('nodeFilter').addEventListener('change', e => renderVMSelect(e.target.value));
     });
 
     document.getElementById('deleteVmForm').addEventListener('submit', async (e) => {

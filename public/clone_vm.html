@@ -82,6 +82,12 @@
             <h1>Clone a VM</h1>
             <form id="cloneVmForm">
               <div class="form-group">
+                <label for="nodeFilter">Node</label>
+                <select id="nodeFilter">
+                  <option value="">All nodes</option>
+                </select>
+              </div>
+              <div class="form-group">
                 <label for="sourceVmid">Source VM ID:</label>
                 <select id="sourceVmid" required>
                   <option value="" disabled selected>Loading VMs...</option>
@@ -129,33 +135,53 @@
             return;
         }
 
+        let allTemplates = [];
+
+        function renderTemplateSelect(nodeFilter) {
+          const sourceVmidSelect = document.getElementById('sourceVmid');
+          const list = nodeFilter ? allTemplates.filter(vm => vm.node === nodeFilter) : allTemplates;
+          if (list.length === 0) {
+            sourceVmidSelect.innerHTML = `<option value="" disabled selected>No templates on this node</option>`;
+          } else {
+            sourceVmidSelect.innerHTML = list
+              .map(vm => `<option value="${vm.vmid}" data-node="${vm.node || ''}">ID: ${vm.vmid} - ${vm.name} (${vm.node})</option>`)
+              .join('');
+          }
+        }
+
         async function fetchTemplates() {
             const sourceVmidSelect = document.getElementById('sourceVmid');
+            const nodeFilterEl = document.getElementById('nodeFilter');
             try {
                 const response = await fetch(`/all-vms?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`);
                 if (!response.ok) throw new Error('Erreur lors de la récupération des VMs.');
 
                 const vms = await response.json();
+                allTemplates = vms.filter(vm => vm.tags && vm.tags.includes('template'));
 
-                // Filtrer les VMs avec le tag "template"
-                const templates = vms.filter(vm => vm.tags && vm.tags.includes('template'));
-
-                if (templates.length === 0) {
+                if (allTemplates.length === 0) {
                     sourceVmidSelect.innerHTML = `<option value="" disabled>No VM with the tag "template"</option>`;
                     return;
                 }
 
-                // Ajouter les options au select
-                sourceVmidSelect.innerHTML = templates
-                    .map(vm => `<option value="${vm.vmid}" data-node="${vm.node || ''}">ID: ${vm.vmid} - Nom: ${vm.name}</option>`)
-                    .join('');
+                // Populate node filter
+                const nodes = [...new Set(allTemplates.map(vm => vm.node).filter(Boolean))].sort();
+                nodes.forEach(n => {
+                  const opt = document.createElement('option');
+                  opt.value = n;
+                  opt.textContent = n;
+                  nodeFilterEl.appendChild(opt);
+                });
+
+                renderTemplateSelect('');
             } catch (error) {
-                console.error('Erreur lors de la récupération des VMs avec le tag "template" :', error);
+                console.error('Erreur lors de la récupération des templates :', error);
                 sourceVmidSelect.innerHTML = `<option value="" disabled>Loading error</option>`;
             }
         }
 
         fetchTemplates();
+        document.getElementById('nodeFilter').addEventListener('change', e => renderTemplateSelect(e.target.value));
 
         async function fetchVMID() {
             const newVmidInput = document.getElementById('newVmid');
