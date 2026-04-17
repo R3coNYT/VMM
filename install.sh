@@ -4,7 +4,7 @@ set -Eeuo pipefail
 
 # =============================================
 # VMM - Virtual Machine Manager
-# Script d'installation — VMM (Debian/Proxmox)
+# Installation script — VMM (Debian/Proxmox)
 # ============================================================
 
 INSTALL_DIR="/opt/vmm"
@@ -23,7 +23,7 @@ warn() { echo -e "${COLOR_YELLOW}[!]${COLOR_RESET} $*"; }
 err()  { echo -e "${COLOR_RED}[✗]${COLOR_RESET} $*" >&2; }
 
 cleanup_on_error() {
-    err "Échec de l'installation à la ligne $1."
+    err "Installation failed at line $1."
     exit 1
 }
 trap 'cleanup_on_error $LINENO' ERR
@@ -39,53 +39,53 @@ echo "    ╚═══╝  ╚═╝     ╚═╝╚═╝     ╚═╝"
 echo -e "${COLOR_WHITE}   Virtual Machine Manager — Installer${COLOR_RESET}"
 echo ""
 
-# ── Installation des prérequis ───────────────────────────────────────────────
-log "Vérification et installation des prérequis..."
+# ── Prerequisites installation ───────────────────────────────────────────────
+log "Checking and installing prerequisites..."
 
 # git
 if ! command -v git &>/dev/null; then
-    log "Installation de git..."
+    log "Installing git..."
     apt-get update -qq
     apt-get install -y git
 fi
-ok "git $(git --version | awk '{print $3}') détecté"
+ok "git $(git --version | awk '{print $3}') detected"
 
 # OpenSSL
 if ! command -v openssl &>/dev/null; then
-    log "Installation d'OpenSSL..."
+    log "Installing OpenSSL..."
     apt-get install -y openssl
 fi
-ok "$(openssl version) détecté"
+ok "$(openssl version) detected"
 
 # Node.js + npm
 if ! command -v node &>/dev/null || ! command -v npm &>/dev/null; then
-    log "Installation de Node.js et npm..."
+    log "Installing Node.js and npm..."
     apt-get update -qq
     apt-get install -y nodejs npm
 fi
-ok "Node.js $(node --version) / npm v$(npm --version) détectés"
+ok "Node.js $(node --version) / npm v$(npm --version) detected"
 
 # pm2
 if ! command -v pm2 &>/dev/null; then
-    log "Installation de pm2..."
+    log "Installing pm2..."
     npm install -g pm2
 fi
-ok "pm2 $(pm2 --version) détecté"
+ok "pm2 $(pm2 --version) detected"
 echo ""
 
-# ── Clonage dans /opt/vmm ───────────────────────────────────────────────────
-log "Déploiement de VMM dans $INSTALL_DIR..."
+# ── Cloning into /opt/vmm ───────────────────────────────────────────────────
+log "Deploying VMM into $INSTALL_DIR..."
 
 if [ -d "$INSTALL_DIR/.git" ]; then
-    warn "$INSTALL_DIR existe déjà, mise à jour du code..."
+    warn "$INSTALL_DIR already exists, updating code..."
     git -C "$INSTALL_DIR" pull origin main
 else
     git clone https://github.com/R3coNYT/VMM.git "$INSTALL_DIR"
 fi
-ok "Code déployé dans $INSTALL_DIR"
+ok "Code deployed in $INSTALL_DIR"
 
-# ── Détection des interfaces réseau ──────────────────────────────────────────
-log "Récupération des interfaces réseau disponibles..."
+# ── Network interface detection ──────────────────────────────────────────────
+log "Retrieving available network interfaces..."
 echo ""
 
 declare -a IFACE_NAMES
@@ -105,19 +105,19 @@ while IFS= read -r iface; do
 done < <(ip link show up | awk -F': ' '/^[0-9]+:/{print $2}')
 
 if [ "$count" -eq 0 ]; then
-    err "Aucune interface réseau active avec une adresse IPv4 trouvée."
+    err "No active network interface with an IPv4 address found."
     exit 1
 fi
 
 echo ""
 CHOICE=""
 while true; do
-    read -rp "  Choisissez une interface (1-$count) : " CHOICE
+    read -rp "  Choose an interface (1-$count): " CHOICE
     if [[ "$CHOICE" =~ ^[0-9]+$ ]] && \
        [ "$CHOICE" -ge 1 ] && [ "$CHOICE" -le "$count" ]; then
         break
     fi
-    warn "Choix invalide, réessayez."
+    warn "Invalid choice, try again."
 done
 
 IDX=$(( CHOICE - 1 ))
@@ -125,30 +125,30 @@ SELECTED_IP="${IFACE_IPS[$IDX]}"
 SELECTED_NAME="${IFACE_NAMES[$IDX]}"
 
 echo ""
-ok "Interface sélectionnée : ${COLOR_WHITE}$SELECTED_NAME${COLOR_RESET} (${COLOR_CYAN}$SELECTED_IP${COLOR_RESET})"
+ok "Selected interface: ${COLOR_WHITE}$SELECTED_NAME${COLOR_RESET} (${COLOR_CYAN}$SELECTED_IP${COLOR_RESET})"
 
-# ── Écriture de vmm.conf ─────────────────────────────────────────────────────
+# ── Writing vmm.conf ─────────────────────────────────────────────────────────
 echo ""
-log "Écriture de la configuration dans $INSTALL_DIR/vmm.conf..."
+log "Writing configuration to $INSTALL_DIR/vmm.conf..."
 
 CONF_PATH="$INSTALL_DIR/vmm.conf"
 
 cat > "$CONF_PATH" <<EOF
 # VMM - Virtual Machine Manager
-# Configuration générée le $(date '+%Y-%m-%d %H:%M:%S')
+# Configuration generated on $(date '+%Y-%m-%d %H:%M:%S')
 
-# Adresse IP de la machine hôte Proxmox
+# IP address of the Proxmox host machine
 IP=$SELECTED_IP
 
-# Port HTTPS de l'interface web
+# HTTPS port for the web interface
 PORT=4000
 EOF
 
-ok "vmm.conf créé → IP=$SELECTED_IP"
+ok "vmm.conf created → IP=$SELECTED_IP"
 
-# ── Génération des certificats SSL ────────────────────────────────────────────
+# ── SSL certificate generation ────────────────────────────────────────────────
 echo ""
-log "Génération des certificats SSL auto-signés..."
+log "Generating self-signed SSL certificates..."
 
 CERT_PATH="$INSTALL_DIR/cert.pem"
 KEY_PATH="$INSTALL_DIR/key.pem"
@@ -178,57 +178,57 @@ if openssl req -x509 -newkey rsa:4096 \
     -days 365 -nodes \
     -config "$CONFIG_TMP" 2>&1 | grep -v "^writing\|Generating"; then
     rm -f "$CONFIG_TMP"
-    ok "Certificats SSL générés : key.pem, cert.pem (365 jours, RSA 4096)"
+    ok "SSL certificates generated: key.pem, cert.pem (365 days, RSA 4096)"
 else
     rm -f "$CONFIG_TMP"
-    err "Échec de la génération des certificats SSL."
+    err "SSL certificate generation failed."
     exit 1
 fi
 
-# ── Installation des dépendances npm ─────────────────────────────────────────
+# ── npm dependencies installation ─────────────────────────────────────────────
 echo ""
-log "Installation des dépendances npm..."
+log "Installing npm dependencies..."
 cd "$INSTALL_DIR"
 npm install
 
-# ── Lancement avec pm2 ───────────────────────────────────────────────────────
+# ── Launch with pm2 ───────────────────────────────────────────────────────────
 echo ""
-log "Lancement de l'application avec pm2..."
+log "Starting the application with pm2..."
 
-# Si une instance VMM tourne déjà on la redémarre, sinon on démarre
+# If a VMM instance is already running restart it, otherwise start fresh
 if pm2 describe VMM &>/dev/null; then
     pm2 restart VMM
-    ok "VMM redémarré via pm2"
+    ok "VMM restarted via pm2"
 else
     pm2 start "$INSTALL_DIR/app.js" --name VMM
-    ok "VMM démarré via pm2"
+    ok "VMM started via pm2"
 fi
 
-# Sauvegarde de la liste pm2 pour redémarrage automatique au boot
+# Save pm2 list for automatic restart on boot
 pm2 save
-log "Activation du démarrage automatique au boot (pm2 startup)..."
+log "Enabling automatic startup on boot (pm2 startup)..."
 pm2 startup systemd -u root --hp /root | tail -1 | bash || \
-    warn "Commande pm2 startup : lancez manuellement la commande affichée ci-dessus si nécessaire."
+    warn "pm2 startup: run the displayed command manually if needed."
 echo ""
 
 chmod +x "$INSTALL_DIR/update.sh"
 
-# ── Nettoyage — suppression du script d'installation ─────────────────────────
+# ── Cleanup — remove installation script ─────────────────────────────────────
 if [ "$SCRIPT_SELF" != "$INSTALL_DIR/install.sh" ]; then
     rm -f "$SCRIPT_SELF"
-    ok "install.sh supprimé"
+    ok "install.sh removed"
 fi
 
-# ── Résumé ────────────────────────────────────────────────────────────────────
+# ── Summary ───────────────────────────────────────────────────────────────────
 echo -e "${COLOR_GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${COLOR_RESET}"
-ok "Installation terminée avec succès !"
+ok "Installation completed successfully!"
 echo ""
-echo -e "  ${COLOR_WHITE}Gérer l'application :${COLOR_RESET}"
-echo -e "  ${COLOR_CYAN}  pm2 status${COLOR_RESET}           — état"
-echo -e "  ${COLOR_CYAN}  pm2 logs VMM${COLOR_RESET}         — logs en direct"
-echo -e "  ${COLOR_CYAN}  pm2 restart VMM${COLOR_RESET}      — redémarrer"
-echo -e "  ${COLOR_CYAN}  pm2 stop VMM${COLOR_RESET}         — arrêter"
+echo -e "  ${COLOR_WHITE}Manage the application:${COLOR_RESET}"
+echo -e "  ${COLOR_CYAN}  pm2 status${COLOR_RESET}           — status"
+echo -e "  ${COLOR_CYAN}  pm2 logs VMM${COLOR_RESET}         — live logs"
+echo -e "  ${COLOR_CYAN}  pm2 restart VMM${COLOR_RESET}      — restart"
+echo -e "  ${COLOR_CYAN}  pm2 stop VMM${COLOR_RESET}         — stop"
 echo ""
-echo -e "  ${COLOR_WHITE}Interface HTTPS :${COLOR_RESET}"
+echo -e "  ${COLOR_WHITE}HTTPS interface:${COLOR_RESET}"
 echo -e "  ${COLOR_CYAN}  https://$SELECTED_IP:4000${COLOR_RESET}"
 echo -e "${COLOR_GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${COLOR_RESET}"
