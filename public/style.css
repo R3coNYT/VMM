@@ -231,7 +231,7 @@ body::before {
 /* ── Welcome Banner ────────────────────────────────────── */
 .welcome {
   text-align: center;
-  padding: 10px 10px 14px;
+  padding: 10px;
   border-bottom: 1px solid var(--border);
 }
 
