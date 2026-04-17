@@ -4,19 +4,19 @@ set -Eeuo pipefail
 
 # =============================================
 # VMM - Virtual Machine Manager
-# Script de mise à jour — VMM (Debian/Proxmox)
+# Update script — VMM (Debian/Proxmox)
 # =============================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INSTALL_DIR="/opt/vmm"
 
-# Si on est déjà dans /opt/vmm on l'utilise directement, sinon on cible /opt/vmm
+# If already in /opt/vmm use it directly, otherwise target /opt/vmm
 if [ -d "$INSTALL_DIR/.git" ]; then
     WORK_DIR="$INSTALL_DIR"
 elif [ -d "$SCRIPT_DIR/.git" ]; then
     WORK_DIR="$SCRIPT_DIR"
 else
-    err "Répertoire d'installation introuvable ($INSTALL_DIR ou $SCRIPT_DIR)."
+    err "Installation directory not found ($INSTALL_DIR or $SCRIPT_DIR)."
     exit 1
 fi
 
@@ -35,7 +35,7 @@ err()  { echo -e "${COLOR_RED}[✗]${COLOR_RESET} $*" >&2; }
 info() { echo -e "${COLOR_GRAY}[i]${COLOR_RESET} $*"; }
 
 cleanup_on_error() {
-    err "Échec de la mise à jour à la ligne $1."
+    err "Update failed at line $1."
     exit 1
 }
 trap 'cleanup_on_error $LINENO' ERR
@@ -51,106 +51,106 @@ echo "    ╚═══╝  ╚═╝     ╚═╝╚═╝     ╚═╝"
 echo -e "${COLOR_WHITE}   Virtual Machine Manager — Updater${COLOR_RESET}"
 echo ""
 
-# ── Vérification git ──────────────────────────────────────────────────────────
+# ── Git check ────────────────────────────────────────────────────────────────
 if ! command -v git &>/dev/null; then
-    err "git n'est pas installé."
+    err "git is not installed."
     warn "  sudo apt install git"
     exit 1
 fi
 
 if [ ! -d "$WORK_DIR/.git" ]; then
-    err "Ce répertoire n'est pas un dépôt git : $WORK_DIR"
+    err "This directory is not a git repository: $WORK_DIR"
     exit 1
 fi
-ok "Dépôt git détecté ($WORK_DIR)"
+ok "Git repository detected ($WORK_DIR)"
 
-# ── Récupération des changements distants ─────────────────────────────────────
+# ── Fetching remote changes ──────────────────────────────────────────────────
 echo ""
-log "Récupération des informations depuis le dépôt distant..."
+log "Fetching information from the remote repository..."
 cd "$WORK_DIR"
 
 git fetch origin 2>/dev/null
-ok "git fetch effectué"
+ok "git fetch done"
 
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 LOCAL_HASH=$(git rev-parse HEAD)
 REMOTE_HASH=$(git rev-parse "origin/$CURRENT_BRANCH" 2>/dev/null || echo "")
 
 if [ -z "$REMOTE_HASH" ]; then
-    err "Impossible de trouver la branche distante : origin/$CURRENT_BRANCH"
+    err "Could not find remote branch: origin/$CURRENT_BRANCH"
     exit 1
 fi
 
-# ── Comparaison local / distant ───────────────────────────────────────────────
+# ── Local / remote comparison ───────────────────────────────────────────────
 echo ""
-info "Branche       : $CURRENT_BRANCH"
-info "Commit local  : ${LOCAL_HASH:0:8}"
-info "Commit distant: ${REMOTE_HASH:0:8}"
+info "Branch        : $CURRENT_BRANCH"
+info "Local commit  : ${LOCAL_HASH:0:8}"
+info "Remote commit : ${REMOTE_HASH:0:8}"
 echo ""
 
 if [ "$LOCAL_HASH" = "$REMOTE_HASH" ]; then
-    ok "L'application est déjà à jour. Aucune mise à jour nécessaire."
+    ok "Application is already up to date. No update needed."
     exit 0
 fi
 
-# ── Affichage des commits à appliquer ─────────────────────────────────────────
+# ── Displaying commits to apply ──────────────────────────────────────────────
 COMMITS=$(git log --oneline HEAD.."origin/$CURRENT_BRANCH")
 COMMIT_COUNT=$(echo "$COMMITS" | grep -c . || true)
 
-log "$COMMIT_COUNT nouveau(x) commit(s) disponible(s) :"
+log "$COMMIT_COUNT new commit(s) available:"
 echo ""
 echo "$COMMITS" | while IFS= read -r line; do
     echo -e "  ${COLOR_GRAY}•${COLOR_RESET} $line"
 done
 echo ""
 
-# ── Vérification des fichiers locaux modifiés ─────────────────────────────────
-# vmm.conf et *.pem sont exclus du suivi git (.gitignore) — pas de risque
+# ── Checking locally modified files ──────────────────────────────────────────
+# vmm.conf and *.pem are excluded from git tracking (.gitignore) — no risk
 CHANGED=$(git status --porcelain | grep -v "^??" || true)
 if [ -n "$CHANGED" ]; then
-    warn "Des fichiers locaux ont été modifiés et pourraient créer des conflits :"
+    warn "Some local files have been modified and could cause conflicts:"
     echo "$CHANGED" | while IFS= read -r f; do
         echo -e "  ${COLOR_YELLOW}$f${COLOR_RESET}"
     done
     echo ""
-    read -rp "  Continuer malgré tout ? [o/N] " CONFIRM
-    if [[ ! "$CONFIRM" =~ ^[Oo]$ ]]; then
-        warn "Mise à jour annulée."
+    read -rp "  Continue anyway? [y/N] " CONFIRM
+    if [[ ! "$CONFIRM" =~ ^[Yy]$ ]]; then
+        warn "Update cancelled."
         exit 0
     fi
 fi
 
-# ── Application de la mise à jour ─────────────────────────────────────────────
-log "Application de la mise à jour..."
+# ── Applying the update ─────────────────────────────────────────────────────
+log "Applying the update..."
 git pull origin "$CURRENT_BRANCH"
 echo ""
-ok "Mise à jour appliquée ($(git rev-parse --short HEAD))"
+ok "Update applied ($(git rev-parse --short HEAD))"
 
-# ── Mise à jour des dépendances npm si package.json a changé ──────────────────
+# ── Update npm dependencies if package.json changed ─────────────────────────
 if git diff HEAD~"$COMMIT_COUNT" HEAD -- package.json &>/dev/null | grep -q .; then
     echo ""
-    log "package.json a changé — mise à jour des dépendances npm..."
+    log "package.json changed — updating npm dependencies..."
     npm install
-    ok "Dépendances npm mises à jour"
+    ok "npm dependencies updated"
 fi
 
 chmod +x update.sh
 
 # ── Résumé ────────────────────────────────────────────────────────────────────
 echo ""
-# ── Redémarrage pm2 ───────────────────────────────────────────────────────────
+# ── pm2 restart ──────────────────────────────────────────────────────────────
 if command -v pm2 &>/dev/null && pm2 describe VMM &>/dev/null; then
-    log "Redémarrage de VMM via pm2..."
+    log "Restarting VMM via pm2..."
     pm2 restart VMM
-    ok "VMM redémarré"
+    ok "VMM restarted"
 else
-    warn "pm2 non détecté ou VMM non enregistré — redémarrez manuellement."
+    warn "pm2 not detected or VMM not registered — restart manually."
 fi
 
 echo -e "${COLOR_GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${COLOR_RESET}"
-ok "VMM est à jour !"
+ok "VMM is up to date!"
 echo ""
-echo -e "  ${COLOR_WHITE}Gérer l'application :${COLOR_RESET}"
-echo -e "  ${COLOR_CYAN}  pm2 status${COLOR_RESET}           — état"
-echo -e "  ${COLOR_CYAN}  pm2 logs VMM${COLOR_RESET}         — logs en direct"
+echo -e "  ${COLOR_WHITE}Manage the application:${COLOR_RESET}"
+echo -e "  ${COLOR_CYAN}  pm2 status${COLOR_RESET}           — status"
+echo -e "  ${COLOR_CYAN}  pm2 logs VMM${COLOR_RESET}         — live logs"
 echo -e "${COLOR_GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${COLOR_RESET}"
