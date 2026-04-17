@@ -75,16 +75,12 @@
     <h1 id="welcome-user">Delete a VM</h1>
   </div>
 
+  <div class="node-bar" id="nodeBar"><span class="node-bar-label">Node :</span></div>
+
     <div class="container">
         <div class="delete-vm-container">
             <h2>Delete a VM</h2>
             <form id="deleteVmForm">
-              <div class="form-group">
-                <label for="nodeFilter">Node</label>
-                <select id="nodeFilter">
-                  <option value="">All nodes</option>
-                </select>
-              </div>
               <div class="form-group">
                 <label for="vmid">Select a VM</label>
                 <select id="vmid" required>
@@ -99,10 +95,26 @@
 
   <script>
     let allDeletableVMs = [];
+    let currentNode = null;
 
-    function renderVMSelect(nodeFilter) {
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+      return null;
+    }
+
+    function getCredentials() {
+      const userCredentials = getCookie('userCredentials');
+      if (!userCredentials) throw new Error('No credentials cookie');
+      const [u, p] = atob(decodeURIComponent(userCredentials)).split(':');
+      if (!u || !p) throw new Error('Invalid credentials');
+      return [u, p];
+    }
+
+    function renderVMSelect(node) {
       const vmidSelect = document.getElementById('vmid');
-      const list = nodeFilter ? allDeletableVMs.filter(vm => vm.node === nodeFilter) : allDeletableVMs;
+      const list = node ? allDeletableVMs.filter(vm => vm.node === node) : allDeletableVMs;
       if (list.length === 0) {
         vmidSelect.innerHTML = `<option value="" disabled selected>No VMs on this node</option>`;
       } else {
@@ -112,61 +124,66 @@
       }
     }
 
+    async function loadNodesBar() {
+      const bar = document.getElementById('nodeBar');
+      try {
+        const [u, pw] = getCredentials();
+        const resp = await fetch(`/nodes?username=${encodeURIComponent(u)}&password=${encodeURIComponent(pw)}`);
+        if (!resp.ok) return;
+        const nodes = await resp.json();
+        bar.innerHTML = '<span class="node-bar-label">Node :</span>';
+        // "All" tab
+        const allTab = document.createElement('button');
+        allTab.className = 'node-tab' + (currentNode === null ? ' active' : '');
+        allTab.textContent = 'All';
+        allTab.addEventListener('click', () => {
+          currentNode = null;
+          document.querySelectorAll('.node-tab').forEach(t => t.classList.remove('active'));
+          allTab.classList.add('active');
+          renderVMSelect(null);
+        });
+        bar.appendChild(allTab);
+        nodes.forEach(n => {
+          const tab = document.createElement('button');
+          tab.className = 'node-tab' + (n.node === currentNode ? ' active' : '') + (n.status !== 'online' ? ' offline' : '');
+          tab.textContent = n.node + (n.status !== 'online' ? ' (offline)' : '');
+          tab.addEventListener('click', () => {
+            currentNode = n.node;
+            document.querySelectorAll('.node-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            renderVMSelect(currentNode);
+          });
+          bar.appendChild(tab);
+        });
+      } catch(e) { console.error('Error loading nodes bar:', e); }
+    }
+
     async function fetchVMs() {
       const vmidSelect = document.getElementById('vmid');
-      const nodeFilter = document.getElementById('nodeFilter');
       try {
-        function getCookie(name) {
-          const value = `; ${document.cookie}`;
-          const parts = value.split(`; ${name}=`);
-          if (parts.length === 2) return parts.pop().split(';').shift();
-          return null;
-        }
-
-        let username, password;
-
-        try {
-          const userCredentials = getCookie('userCredentials');
-          if (!userCredentials) throw new Error('Cookie userCredentials introuvable');
-          const decodedUrl = decodeURIComponent(userCredentials);
-          const decodedCredentials = atob(decodedUrl);
-          [username, password] = decodedCredentials.split(':');
-          if (!username || !password) throw new Error('Identifiant ou mot de passe manquant');
-        } catch (error) {
-          showToast('Authentication cookie error. Please log in again.', 'error');
-          window.location.href = '/login';
-          return;
-        }
-
+        const [username, password] = getCredentials();
         const response = await fetch(`/all-vms?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`);
         if (!response.ok) throw new Error('Failed to fetch VMs');
         const vms = await response.json();
-
-        // Exclude templates and personal VMs
         allDeletableVMs = vms.filter(vm => {
           const tags = vm.tags ? vm.tags.split(';').map(t => t.trim().toLowerCase()) : [];
           return !tags.includes('template') && !tags.includes('perso');
         });
-
-        // Populate node filter
-        const nodes = [...new Set(allDeletableVMs.map(vm => vm.node).filter(Boolean))].sort();
-        nodes.forEach(n => {
-          const opt = document.createElement('option');
-          opt.value = n;
-          opt.textContent = n;
-          nodeFilter.appendChild(opt);
-        });
-
-        renderVMSelect('');
+        renderVMSelect(currentNode);
       } catch (error) {
+        if (error.message === 'No credentials cookie' || error.message === 'Invalid credentials') {
+          showToast('Authentication cookie error. Please log in again.', 'error');
+          window.location.href = '/login';
+          return;
+        }
         console.error('Error fetching VMs:', error);
         vmidSelect.innerHTML = `<option value="" disabled>Loading error</option>`;
       }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
+      loadNodesBar();
       fetchVMs();
-      document.getElementById('nodeFilter').addEventListener('change', e => renderVMSelect(e.target.value));
     });
 
     document.getElementById('deleteVmForm').addEventListener('submit', async (e) => {
@@ -177,67 +194,40 @@
       const vmNode = vmidSelect.selectedOptions[0]?.dataset?.node || '';
 
       if (!await showConfirm(`Are you sure you want to delete VM with VMID ${vmid}?`)) {
-        return; // Annuler la suppression si l'utilisateur clique sur "Annuler"
+        return;
       }
-  
-      // Fonction pour récupérer les cookies
-      function getCookie(name) {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop().split(';').shift();
-        return null;
-      }
-  
+
       let username, password;
-  
       try {
-        // Récupérer le cookie contenant les identifiants
-        const userCredentials = getCookie('userCredentials');
-  
-        if (!userCredentials) {
-          throw new Error('Cookie userCredentials introuvable');
-        }
-  
-        // Décoder le cookie
-        const decodedUrl = decodeURIComponent(userCredentials);
-        const decodedCredentials = atob(decodedUrl);
-  
-        // Extraire le nom d'utilisateur et le mot de passe
-        [username, password] = decodedCredentials.split(':');
-  
-        if (!username || !password) {
-          throw new Error('Identifiant ou mot de passe manquant après décodage');
-        }
+        [username, password] = getCredentials();
       } catch (error) {
-        console.error('Erreur lors du décodage du cookie userCredentials :', error);
         showToast('Authentication cookie error. Please log in again.', 'error');
         window.location.href = '/login';
-        return; // Arrêter l'exécution si le cookie est invalide
+        return;
       }
-  
+
       try {
-        // Envoi de la requête de suppression avec les identifiants
         const response = await fetch(`/vms/${vmid}?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&node=${encodeURIComponent(vmNode)}`, {
           method: 'DELETE',
           credentials: 'include',
         });
-  
+
         const resultElement = document.getElementById('result');
         if (response.ok) {
           const message = await response.text();
           resultElement.className = 'success-message';
-          resultElement.textContent = `Succès : ${message}`;
+          resultElement.textContent = `Success: ${message}`;
           setTimeout(() => (window.location.href = '/dashboard'), 1000);
         } else {
           const errorText = await response.text();
           resultElement.className = 'error-message';
-          resultElement.textContent = `Erreur : ${errorText}`;
+          resultElement.textContent = `Error: ${errorText}`;
         }
       } catch (error) {
-        console.error('Erreur lors de la suppression de la VM :', error);
+        console.error('Error deleting VM:', error);
         const resultElement = document.getElementById('result');
         resultElement.className = 'error-message';
-        resultElement.textContent = 'Une erreur est survenue lors de la suppression de la VM.';
+        resultElement.textContent = 'An error occurred while deleting the VM.';
       }
     });
   </script>

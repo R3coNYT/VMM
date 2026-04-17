@@ -77,16 +77,12 @@
         </ul>
     </nav>
 
+    <div class="node-bar" id="nodeBar"><span class="node-bar-label">Node :</span></div>
+
     <div class="clonediv">
         <div class="container">
             <h1>Clone a VM</h1>
             <form id="cloneVmForm">
-              <div class="form-group">
-                <label for="nodeFilter">Node</label>
-                <select id="nodeFilter">
-                  <option value="">All nodes</option>
-                </select>
-              </div>
               <div class="form-group">
                 <label for="sourceVmid">Source VM ID:</label>
                 <select id="sourceVmid" required>
@@ -118,28 +114,23 @@
         }
 
         let username, password;
-
         try {
             const userCredentials = getCookie('userCredentials');
             if (!userCredentials) throw new Error('Cookie userCredentials introuvable');
-
-            const decodedUrl = decodeURIComponent(userCredentials);
-            const decodedCredentials = atob(decodedUrl);
-            [username, password] = decodedCredentials.split(':');
-
+            [username, password] = atob(decodeURIComponent(userCredentials)).split(':');
             if (!username || !password) throw new Error('Identifiant ou mot de passe manquant');
         } catch (error) {
-            console.error('Erreur lors du décodage du cookie userCredentials :', error);
             showToast('Authentication cookie error. Please log in again.', 'error');
             window.location.href = '/login';
             return;
         }
 
         let allTemplates = [];
+        let currentNode = null;
 
-        function renderTemplateSelect(nodeFilter) {
+        function renderTemplateSelect(node) {
           const sourceVmidSelect = document.getElementById('sourceVmid');
-          const list = nodeFilter ? allTemplates.filter(vm => vm.node === nodeFilter) : allTemplates;
+          const list = node ? allTemplates.filter(vm => vm.node === node) : allTemplates;
           if (list.length === 0) {
             sourceVmidSelect.innerHTML = `<option value="" disabled selected>No templates on this node</option>`;
           } else {
@@ -149,39 +140,59 @@
           }
         }
 
+        async function loadNodesBar() {
+          const bar = document.getElementById('nodeBar');
+          try {
+            const resp = await fetch(`/nodes?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`);
+            if (!resp.ok) return;
+            const nodes = await resp.json();
+            bar.innerHTML = '<span class="node-bar-label">Node :</span>';
+            const allTab = document.createElement('button');
+            allTab.className = 'node-tab active';
+            allTab.textContent = 'All';
+            allTab.addEventListener('click', () => {
+              currentNode = null;
+              document.querySelectorAll('.node-tab').forEach(t => t.classList.remove('active'));
+              allTab.classList.add('active');
+              renderTemplateSelect(null);
+            });
+            bar.appendChild(allTab);
+            nodes.forEach(n => {
+              const tab = document.createElement('button');
+              tab.className = 'node-tab' + (n.node === currentNode ? ' active' : '') + (n.status !== 'online' ? ' offline' : '');
+              tab.textContent = n.node + (n.status !== 'online' ? ' (offline)' : '');
+              tab.addEventListener('click', () => {
+                currentNode = n.node;
+                document.querySelectorAll('.node-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                renderTemplateSelect(currentNode);
+              });
+              bar.appendChild(tab);
+            });
+          } catch(e) { console.error('Error loading nodes bar:', e); }
+        }
+
         async function fetchTemplates() {
             const sourceVmidSelect = document.getElementById('sourceVmid');
-            const nodeFilterEl = document.getElementById('nodeFilter');
             try {
                 const response = await fetch(`/all-vms?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`);
                 if (!response.ok) throw new Error('Erreur lors de la récupération des VMs.');
-
                 const vms = await response.json();
                 allTemplates = vms.filter(vm => vm.tags && vm.tags.includes('template'));
-
                 if (allTemplates.length === 0) {
                     sourceVmidSelect.innerHTML = `<option value="" disabled>No VM with the tag "template"</option>`;
                     return;
                 }
-
-                // Populate node filter
-                const nodes = [...new Set(allTemplates.map(vm => vm.node).filter(Boolean))].sort();
-                nodes.forEach(n => {
-                  const opt = document.createElement('option');
-                  opt.value = n;
-                  opt.textContent = n;
-                  nodeFilterEl.appendChild(opt);
-                });
-
-                renderTemplateSelect('');
+                renderTemplateSelect(null);
             } catch (error) {
                 console.error('Erreur lors de la récupération des templates :', error);
                 sourceVmidSelect.innerHTML = `<option value="" disabled>Loading error</option>`;
             }
         }
 
+        loadNodesBar();
         fetchTemplates();
-        document.getElementById('nodeFilter').addEventListener('change', e => renderTemplateSelect(e.target.value));
+        // remove old nodeFilter listener - now handled by node-bar tabs
 
         async function fetchVMID() {
             const newVmidInput = document.getElementById('newVmid');
