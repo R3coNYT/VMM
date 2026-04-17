@@ -88,6 +88,7 @@
         <a href="https://www.canva.com/design/DAGdy8ez_i0/8oSJ8xHat-2Lvol-OGj4XQ/view?utm_content=DAGdy8ez_i0&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hd46a505919#1" target="_blank" class="tuto-link">Tutorial</a>
         <ul class="nav-links">
             <li><a href="/dashboard">Home</a></li>
+            <li><a href="/iso">ISO</a></li>
             <li><a href="/clone-vm">Clone VM</a></li>
             <li><a href="/new-vm">New VM</a></li>
             <li><a href="/del-vm">Delete VM</a></li>
@@ -130,6 +131,12 @@
 
       <!-- OS -->
       <div class="tab-content" id="os">
+        <div class="form-group">
+          <label for="iso-storage">ISO Storage:</label>
+          <select id="iso-storage">
+            <option value="" disabled selected>Loading...</option>
+          </select>
+        </div>
         <div class="form-group">
           <label for="iso-image">ISO:</label>
           <select id="iso-image" name="isoImage" required>
@@ -223,15 +230,41 @@
             return;
         }
 
+        async function fetchIsoStorages() {
+            const isoStorageSel = document.getElementById('iso-storage');
+            try {
+                const resp = await fetch(`/iso-storages?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&node=${encodeURIComponent(currentNode || '')}`);
+                if (!resp.ok) throw new Error('Failed to fetch ISO storages');
+                const storages = await resp.json();
+                if (storages.length === 0) {
+                    isoStorageSel.innerHTML = '<option value="" disabled>No directory storage found</option>';
+                    document.getElementById('iso-image').innerHTML = '<option value="">No ISO storage available</option>';
+                    return;
+                }
+                isoStorageSel.innerHTML = storages.map(s => `<option value="${s.storage}">${s.storage}</option>`).join('');
+                // Reload ISOs when storage changes
+                isoStorageSel.addEventListener('change', fetchIso);
+                await fetchIso();
+            } catch (error) {
+                console.error('Error fetching ISO storages:', error);
+                isoStorageSel.innerHTML = '<option value="">Error loading storages</option>';
+            }
+        }
+
         async function fetchIso() {
             const isoImageSelect = document.getElementById('iso-image');
+            const isoStorageSel = document.getElementById('iso-storage');
+            const storage = isoStorageSel.value || isoStorageSel.options[0]?.value || 'local';
             try {
-                const response = await fetch(`/iso-list?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&node=${encodeURIComponent(currentNode || '')}`);
+                const response = await fetch(`/iso-list?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&node=${encodeURIComponent(currentNode || '')}&storage=${encodeURIComponent(storage)}`);
                 if (!response.ok) throw new Error('Failed to fetch ISO images');
-
                 const isoImages = await response.json();
+                if (isoImages.length === 0) {
+                    isoImageSelect.innerHTML = '<option value="">No ISO files in this storage</option>';
+                    return;
+                }
                 isoImageSelect.innerHTML = isoImages
-                    .map(iso => `<option value="${iso.volid}">${iso.volid}</option>`)
+                    .map(iso => `<option value="${iso.volid}">${iso.volid.split('/').pop()}</option>`)
                     .join('');
             } catch (error) {
                 console.error('Error fetching ISO images:', error);
@@ -335,7 +368,7 @@
                         sessionStorage.setItem('selectedNode', currentNode);
                         document.querySelectorAll('.node-tab').forEach(t => t.classList.remove('active'));
                         tab.classList.add('active');
-                        fetchIso();
+                        fetchIsoStorages();
                         fetchStorages();
                     });
                     bar.appendChild(tab);
@@ -344,7 +377,7 @@
         }
 
         await loadNodesBar();
-        fetchIso();
+        fetchIsoStorages();
         fetchVMID();
         fetchStorages();
 

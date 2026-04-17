@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ISO Manager</title>
+  <link rel="icon" type="image/x-icon" href="./VMM.ico">
+  <script>(function(){var t=localStorage.getItem('vmm-theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
+  <link rel="stylesheet" href="./style.css">
+  <style>
+    .iso-layout {
+      display: flex;
+      gap: 24px;
+      padding: 32px 40px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+
+    .iso-browser {
+      flex: 1 1 480px;
+      min-width: 300px;
+    }
+
+    .iso-upload-col {
+      flex: 0 0 300px;
+      min-width: 260px;
+      position: sticky;
+      top: 84px;
+    }
+
+    .storage-card {
+      background: var(--surface-card);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      margin-bottom: 16px;
+      animation: fadeSlideUp 0.4s var(--ease) both;
+    }
+
+    .storage-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .storage-card-header h3 {
+      font-size: 0.97em;
+      font-weight: 700;
+      color: var(--text);
+      margin: 0;
+    }
+
+    .storage-type-badge {
+      font-size: 0.68em;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: rgba(99,102,241,0.18);
+      color: var(--accent);
+      border: 1px solid rgba(99,102,241,0.3);
+      font-weight: 600;
+      margin-left: auto;
+    }
+
+    .iso-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .iso-list li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 8px;
+      border-radius: 8px;
+      font-size: 0.86em;
+      transition: background var(--transition);
+    }
+
+    .iso-list li:hover { background: rgba(255,255,255,0.04); }
+
+    .iso-list li .iso-name {
+      flex: 1;
+      font-weight: 500;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .iso-list li .iso-size {
+      font-size: 0.78em;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .iso-empty {
+      color: var(--text-muted);
+      font-size: 0.84em;
+      padding: 6px 0;
+      text-align: center;
+      opacity: 0.6;
+    }
+
+    .iso-loading {
+      color: var(--text-muted);
+      font-size: 0.84em;
+      padding: 6px 0;
+      opacity: 0.5;
+    }
+
+    /* Upload card */
+    .upload-card {
+      background: var(--surface-card);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 22px 20px;
+    }
+
+    .upload-card h3 {
+      font-size: 0.97em;
+      font-weight: 700;
+      color: var(--text);
+      margin: 0 0 18px;
+    }
+
+    .file-drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 20px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color var(--transition), background var(--transition);
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .file-drop-zone:hover,
+    .file-drop-zone.drag-over {
+      border-color: var(--accent);
+      background: rgba(99,102,241,0.06);
+    }
+
+    .file-drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .drop-icon { font-size: 1.8em; margin-bottom: 6px; }
+
+    .drop-label {
+      font-size: 0.82em;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .file-selected-name {
+      font-size: 0.8em;
+      color: var(--accent2);
+      margin-top: 5px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .upload-progress {
+      display: none;
+      margin-top: 10px;
+    }
+
+    .progress-bar-bg {
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+      height: 5px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 20px;
+      width: 0%;
+      transition: width 0.25s ease;
+    }
+
+    .progress-label {
+      font-size: 0.76em;
+      color: var(--text-muted);
+      margin-top: 4px;
+      text-align: center;
+    }
+
+    .btn-upload {
+      width: 100%;
+      padding: 10px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      font-size: 0.92em;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 12px;
+      transition: box-shadow var(--transition), filter var(--transition);
+    }
+
+    .btn-upload:hover:not(:disabled) {
+      box-shadow: 0 0 20px var(--accent-glow);
+      filter: brightness(1.1);
+    }
+
+    .btn-upload:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .no-node-msg {
+      color: var(--text-muted);
+      padding: 32px;
+      text-align: center;
+      font-size: 0.9em;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+  <nav class="modern-navbar">
+    <img src="./img/VMM.png" alt="VMM" style="width: 50px; margin-right: 5px;">
+    <div class="logo">Virtual Machines Manager</div>
+    <a href="https://www.canva.com/design/DAGdy8ez_i0/8oSJ8xHat-2Lvol-OGj4XQ/view?utm_content=DAGdy8ez_i0&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hd46a505919#1" target="_blank" class="tuto-link">Tutorial</a>
+    <ul class="nav-links">
+      <li><a href="/dashboard">Home</a></li>
+      <li><a href="/iso" class="active">ISO</a></li>
+      <li><a href="/clone-vm">Clone VM</a></li>
+      <li><a href="/new-vm">New VM</a></li>
+      <li><a href="/del-vm">Delete VM</a></li>
+      <li><a href="#" id="logout">Log out</a></li>
+    </ul>
+  </nav>
+
+  <div class="welcome">
+    <h1>ISO Manager</h1>
+  </div>
+
+  <div class="node-bar" id="nodeBar"><span class="node-bar-label">Node :</span></div>
+
+  <div class="iso-layout">
+    <!-- ISO Browser -->
+    <div class="iso-browser" id="isoBrowser">
+      <div class="no-node-msg">Select a node to browse ISO files.</div>
+    </div>
+
+    <!-- Upload -->
+    <div class="iso-upload-col">
+      <div class="upload-card">
+        <h3>Upload ISO</h3>
+        <div class="form-group">
+          <label for="uploadStorage">Target storage</label>
+          <select id="uploadStorage">
+            <option value="" disabled selected>Select a node first...</option>
+          </select>
+        </div>
+
+        <div class="file-drop-zone" id="dropZone">
+          <input type="file" id="isoFile" accept=".iso,application/octet-stream">
+          <div class="drop-icon">💿</div>
+          <div class="drop-label">Click or drag & drop an ISO</div>
+          <div class="file-selected-name" id="selectedFileName"></div>
+        </div>
+
+        <div class="upload-progress" id="uploadProgress">
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progressFill"></div>
+          </div>
+          <div class="progress-label" id="progressLabel">Uploading…</div>
+        </div>
+
+        <button class="btn-upload" id="uploadBtn" disabled>Upload</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ── Auth ─────────────────────────────────────────── */
+    function getCookie(name) {
+      const v = `; ${document.cookie}`;
+      const p = v.split(`; ${name}=`);
+      if (p.length === 2) return p.pop().split(';').shift();
+      return null;
+    }
+
+    let username, password;
+    try {
+      const raw = getCookie('userCredentials');
+      if (!raw) throw new Error();
+      [username, password] = atob(decodeURIComponent(raw)).split(':');
+      if (!username || !password) throw new Error();
+    } catch { window.location.href = '/login'; }
+
+    let currentNode = sessionStorage.getItem('selectedNode') || null;
+
+    /* ── Helpers ──────────────────────────────────────── */
+    function qs(id) { return document.getElementById(id); }
+
+    function formatSize(bytes) {
+      if (!bytes) return '';
+      if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(1) + ' GB';
+      if (bytes >= 1048576)    return (bytes / 1048576).toFixed(1) + ' MB';
+      return (bytes / 1024).toFixed(0) + ' KB';
+    }
+
+    /* ── Fetch helpers ────────────────────────────────── */
+    async function fetchIsoStorages() {
+      const r = await fetch(`/iso-storages?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&node=${encodeURIComponent(currentNode)}`);
+      return r.ok ? r.json() : [];
+    }
+
+    async function fetchIsoList(storage) {
+      const r = await fetch(`/iso-list?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&node=${encodeURIComponent(currentNode)}&storage=${encodeURIComponent(storage)}`);
+      return r.ok ? r.json() : [];
+    }
+
+    /* ── Render browser ───────────────────────────────── */
+    async function refreshBrowser() {
+      const browser = qs('isoBrowser');
+      const uploadSel = qs('uploadStorage');
+
+      if (!currentNode) {
+        browser.innerHTML = '<div class="no-node-msg">Select a node to browse ISO files.</div>';
+        uploadSel.innerHTML = '<option value="" disabled selected>Select a node first...</option>';
+        return;
+      }
+
+      browser.innerHTML = '<div class="no-node-msg" style="opacity:.5">Loading storages…</div>';
+      uploadSel.innerHTML = '<option value="" disabled selected>Loading…</option>';
+
+      const storages = await fetchIsoStorages();
+
+      if (storages.length === 0) {
+        browser.innerHTML = '<div class="no-node-msg">No directory storage with ISO content on this node.</div>';
+        uploadSel.innerHTML = '<option value="" disabled selected>No storage available</option>';
+        return;
+      }
+
+      /* Populate upload storage select */
+      uploadSel.innerHTML = storages.map(s => `<option value="${s.storage}">${s.storage}</option>`).join('');
+
+      /* Render one card per storage */
+      browser.innerHTML = '';
+      for (const s of storages) {
+        const card = document.createElement('div');
+        card.className = 'storage-card';
+        card.innerHTML = `
+          <div class="storage-card-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            <h3>${s.storage}</h3>
+            <span class="storage-type-badge">${s.type}</span>
+          </div>
+          <ul class="iso-list" id="isolist-${s.storage}">
+            <li><span class="iso-loading">Loading ISO list…</span></li>
+          </ul>`;
+        browser.appendChild(card);
+
+        /* async – fill each list independently */
+        fetchIsoList(s.storage).then(isos => {
+          const ul = qs(`isolist-${s.storage}`);
+          if (!ul) return;
+          if (isos.length === 0) {
+            ul.innerHTML = '<li class="iso-empty">No ISO files in this storage</li>';
+            return;
+          }
+          ul.innerHTML = isos.map(iso => {
+            const name = iso.volid.split('/').pop();
+            const size = formatSize(iso.size);
+            return `<li>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="1.5" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+              <span class="iso-name">${name}</span>
+              ${size ? `<span class="iso-size">${size}</span>` : ''}
+            </li>`;
+          }).join('');
+        }).catch(() => {
+          const ul = qs(`isolist-${s.storage}`);
+          if (ul) ul.innerHTML = '<li class="iso-empty">Error loading ISO list</li>';
+        });
+      }
+    }
+
+    /* ── Node bar ─────────────────────────────────────── */
+    async function loadNodesBar() {
+      const bar = qs('nodeBar');
+      try {
+        const resp = await fetch(`/nodes?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`);
+        if (!resp.ok) return;
+        const nodes = await resp.json();
+        if (!currentNode && nodes.length > 0) {
+          currentNode = nodes[0].node;
+          sessionStorage.setItem('selectedNode', currentNode);
+        }
+        bar.innerHTML = '<span class="node-bar-label">Node :</span>';
+        nodes.forEach(n => {
+          const tab = document.createElement('button');
+          tab.className = 'node-tab' + (n.node === currentNode ? ' active' : '') + (n.status !== 'online' ? ' offline' : '');
+          tab.textContent = n.node + (n.status !== 'online' ? ' (offline)' : '');
+          tab.addEventListener('click', () => {
+            currentNode = n.node;
+            sessionStorage.setItem('selectedNode', currentNode);
+            document.querySelectorAll('.node-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            refreshBrowser();
+          });
+          bar.appendChild(tab);
+        });
+      } catch(e) { console.error('Error loading nodes:', e); }
+    }
+
+    /* ── File drop zone ───────────────────────────────── */
+    const dropZone = qs('dropZone');
+    const fileInput = qs('isoFile');
+    const fileNameEl = qs('selectedFileName');
+    const uploadBtn = qs('uploadBtn');
+    let selectedFile = null;
+
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      const f = e.dataTransfer.files[0];
+      if (f) setFile(f);
+    });
+    fileInput.addEventListener('change', () => { if (fileInput.files[0]) setFile(fileInput.files[0]); });
+
+    function setFile(f) {
+      selectedFile = f;
+      fileNameEl.textContent = f.name;
+      uploadBtn.disabled = false;
+    }
+
+    /* ── Upload ───────────────────────────────────────── */
+    uploadBtn.addEventListener('click', () => {
+      const storage = qs('uploadStorage').value;
+      if (!storage || !selectedFile || !currentNode) return;
+
+      const progressEl = qs('uploadProgress');
+      const fillEl = qs('progressFill');
+      const labelEl = qs('progressLabel');
+
+      progressEl.style.display = 'block';
+      uploadBtn.disabled = true;
+      fillEl.style.width = '0%';
+      labelEl.textContent = 'Uploading…';
+
+      const fd = new FormData();
+      fd.append('content', 'iso');
+      fd.append('filename', selectedFile, selectedFile.name);
+
+      const xhr = new XMLHttpRequest();
+
+      xhr.upload.addEventListener('progress', e => {
+        if (e.lengthComputable) {
+          const pct = Math.round((e.loaded / e.total) * 100);
+          fillEl.style.width = pct + '%';
+          labelEl.textContent = `${pct}% — ${formatSize(e.loaded)} / ${formatSize(e.total)}`;
+        }
+      });
+
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          showToast('ISO uploaded successfully!', 'success');
+          selectedFile = null;
+          fileNameEl.textContent = '';
+          uploadBtn.disabled = true;
+          fillEl.style.width = '100%';
+          labelEl.textContent = 'Done!';
+          setTimeout(() => { progressEl.style.display = 'none'; }, 2500);
+          refreshBrowser();
+        } else {
+          showToast('Upload failed: ' + xhr.responseText, 'error');
+          uploadBtn.disabled = false;
+          progressEl.style.display = 'none';
+        }
+      });
+
+      xhr.addEventListener('error', () => {
+        showToast('Upload error.', 'error');
+        uploadBtn.disabled = false;
+        progressEl.style.display = 'none';
+      });
+
+      xhr.open('POST', `/iso-upload?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&node=${encodeURIComponent(currentNode)}&storage=${encodeURIComponent(storage)}`);
+      xhr.send(fd);
+    });
+
+    /* ── Init ─────────────────────────────────────────── */
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadNodesBar();
+      refreshBrowser();
+    });
+  </script>
+  <script src="./toast.js"></script>
+  <script src="./logout.js"></script>
+</body>
+</html>

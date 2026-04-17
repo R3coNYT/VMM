@@ -83,6 +83,10 @@ app.get('/del-vm', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'del_vm.html'));
 });
 
+app.get('/iso', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'iso.html'));
+});
+
 app.post('/authenticate', async (req, res) => {
   const { username, password } = req.body;
 
@@ -575,7 +579,7 @@ app.post('/clone-vm', async (req, res) => {
 });
 
 app.get('/iso-list', async (req, res) => {
-  const { username, password, node } = req.query;
+  const { username, password, node, storage } = req.query;
 
   if (!username || !password) {
       return res.status(400).json({ message: 'Identifiant ou mot de passe manquant.' });
@@ -583,6 +587,8 @@ app.get('/iso-list', async (req, res) => {
   if (!node) {
       return res.status(400).json({ message: "Paramètre 'node' manquant." });
   }
+
+  const targetStorage = storage || 'local';
 
   try {
       const ticketResponse = await axios.post(
@@ -593,12 +599,10 @@ app.get('/iso-list', async (req, res) => {
 
       const ticket = ticketResponse.data.data.ticket;
 
-      const isoUrl = `https://${IP}:8006/api2/json/nodes/${node}/storage/local/content`;
+      const isoUrl = `https://${IP}:8006/api2/json/nodes/${node}/storage/${encodeURIComponent(targetStorage)}/content?content=iso`;
 
       const isoResponse = await axios.get(isoUrl, {
-          headers: {
-              Cookie: `PVEAuthCookie=${ticket}`,
-          },
+          headers: { Cookie: `PVEAuthCookie=${ticket}` },
           httpsAgent,
       });
 
@@ -609,6 +613,79 @@ app.get('/iso-list', async (req, res) => {
       res.status(500).send('Erreur lors de la récupération des ISO.');
   }
 });
+
+app.get('/iso-storages', async (req, res) => {
+  const { username, password, node } = req.query;
+  if (!username || !password || !node) {
+    return res.status(400).json({ message: 'Missing params.' });
+  }
+  try {
+    const ticketResp = await axios.post(
+      `https://${IP}:8006/api2/json/access/ticket`,
+      new URLSearchParams({ username, password }),
+      { httpsAgent }
+    );
+    const ticket = ticketResp.data.data.ticket;
+    const storagesResp = await axios.get(
+      `https://${IP}:8006/api2/json/nodes/${node}/storage`,
+      { headers: { Cookie: `PVEAuthCookie=${ticket}` }, httpsAgent }
+    );
+    // Only directory-type storages that can hold ISO content
+    const isoStorages = storagesResp.data.data.filter(
+      s => s.type === 'dir' && (s.content || '').includes('iso')
+    );
+    res.json(isoStorages.map(s => ({ storage: s.storage, type: s.type, content: s.content })));
+  } catch (error) {
+    console.error('Error fetching ISO storages:', error.response?.data || error.message);
+    res.status(500).json({ message: 'Error fetching ISO storages.' });
+  }
+});
+
+app.post('/iso-upload', async (req, res) => {
+  const { username, password, node, storage } = req.query;
+  if (!username || !password || !node || !storage) {
+    return res.status(400).json({ message: 'Missing query params.' });
+  }
+  try {
+    const ticketResp = await axios.post(
+      `https://${IP}:8006/api2/json/access/ticket`,
+      new URLSearchParams({ username, password }),
+      { httpsAgent }
+    );
+    const { ticket, CSRFPreventionToken } = ticketResp.data.data;
+
+    const proxmoxReq = https.request({
+      hostname: IP,
+      port: 8006,
+      path: `/api2/json/nodes/${encodeURIComponent(node)}/storage/${encodeURIComponent(storage)}/upload`,
+      method: 'POST',
+      headers: {
+        'Cookie': `PVEAuthCookie=${ticket}`,
+        'CSRFPreventionToken': CSRFPreventionToken,
+        'Content-Type': req.headers['content-type'],
+        ...(req.headers['content-length'] ? { 'Content-Length': req.headers['content-length'] } : {}),
+      },
+      rejectUnauthorized: false,
+    }, (proxmoxRes) => {
+      let data = '';
+      proxmoxRes.on('data', chunk => data += chunk);
+      proxmoxRes.on('end', () => {
+        if (!res.headersSent) res.status(proxmoxRes.statusCode).send(data);
+      });
+    });
+
+    proxmoxReq.on('error', (e) => {
+      console.error('Proxmox upload pipe error:', e);
+      if (!res.headersSent) res.status(500).json({ message: e.message });
+    });
+
+    req.pipe(proxmoxReq);
+  } catch (error) {
+    console.error('ISO upload auth error:', error.response?.data || error.message);
+    if (!res.headersSent) res.status(500).json({ message: 'Upload failed.', error: error.response?.data || error.message });
+  }
+});
+
 
 app.get('/storages', async (req, res) => {
   const { username, password, node } = req.query;
