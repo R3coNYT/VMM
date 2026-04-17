@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Supprimer une VM</title>
+  <title>Delete a VM</title>
   <link rel="icon" type="image/x-icon" href="./VMM.ico">
   <script>(function(){var t=localStorage.getItem('vmm-theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
   <link rel="stylesheet" href="./style.css">
@@ -58,33 +58,33 @@
   </style>
 </head>
 <body>
-  <nav class="modern-navbar">
+    <nav class="modern-navbar">
     <img src="./img/VMM.png" alt="VMM" style="width: 50px; margin-right: 5px;">
     <div class="logo">Virtual Machines Manager</div>
+    <a href="https://www.canva.com/design/DAGdy8ez_i0/8oSJ8xHat-2Lvol-OGj4XQ/view?utm_content=DAGdy8ez_i0&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hd46a505919#1" target="_blank" class="tuto-link">Tutorial</a>
     <ul class="nav-links">
-      <li><a href="/dashboard">Accueil</a></li>
-      <li><a href="https://www.canva.com/design/DAGdy8ez_i0/8oSJ8xHat-2Lvol-OGj4XQ/view?utm_content=DAGdy8ez_i0&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hd46a505919#1" target="_blank">Tuto</a></li>
-      <li><a href="/clone-vm">Cloner VM</a></li>
-      <li><a href="/new-vm">Nouvelle VM</a></li>
-      <li><a href="/del-vm">Supprimer VM</a></li>
-      <li><a href="#" id="logout">Se déconnecter</a></li>
+      <li><a href="/dashboard">Home</a></li>
+      <li><a href="/clone-vm">Clone VM</a></li>
+      <li><a href="/new-vm">New VM</a></li>
+      <li><a href="/del-vm">Delete VM</a></li>
+      <li><a href="#" id="logout">Log out</a></li>
     </ul>
   </nav>
 
   <div class="welcome">
-    <h1 id="welcome-user">Supprimer une VM</h1>
+    <h1 id="welcome-user">Delete a VM</h1>
   </div>
 
     <div class="container">
         <div class="delete-vm-container">
-            <h2>Supprimer une VM</h2>
+            <h2>Delete a VM</h2>
             <form id="deleteVmForm">
-              <label for="vmid">Sélectionnez une VM</label>
+              <label for="vmid">Select a VM</label>
               <select id="vmid" required>
-                <option value="" disabled selected>Chargement des VMs...</option>
+                <option value="" disabled selected>Loading VMs...</option>
               </select>
               <br>
-              <button type="submit">Supprimer</button>
+              <button type="submit">Delete</button>
             </form>
             <div id="result"></div>
         </div>
@@ -116,19 +116,19 @@
           if (!username || !password) throw new Error('Identifiant ou mot de passe manquant');
         } catch (error) {
           console.error('Erreur lors du décodage du cookie userCredentials :', error);
-          showToast('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.', 'error');
+          showToast('Authentication cookie error. Please log in again.', 'error');
           window.location.href = '/login';
           return;
         }
 
-        // Requête pour récupérer les VMs
+        // Fetch VMs
         const response = await fetch(`/all-vms?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`);
         if (!response.ok) throw new Error('Erreur lors de la récupération des VMs.');
 
         const vms = await response.json();
 
         if (vms.length === 0) {
-          vmidSelect.innerHTML = `<option value="" disabled>Aucune VM disponible</option>`;
+          vmidSelect.innerHTML = `<option value="" disabled>No VMs available</option>`;
           return;
         }
 
@@ -140,7 +140,7 @@
 
         // Ajouter les options au select
         if (filteredVMs.length === 0) {
-          vmidSelect.innerHTML = `<option value="" disabled>Aucune VM disponible (hors template et perso)</option>`;
+          vmidSelect.innerHTML = `<option value="" disabled>No VMs available (excluding templates and personal)</option>`;
         } else {
           vmidSelect.innerHTML = filteredVMs
             .map(vm => `<option value="${vm.vmid}" data-node="${vm.node || ''}">ID: ${vm.vmid} - Nom: ${vm.name}</option>`)
@@ -148,7 +148,7 @@
         }
       } catch (error) {
         console.error('Erreur lors de la récupération des VMs :', error);
-        vmidSelect.innerHTML = `<option value="" disabled>Erreur lors du chargement</option>`;
+        vmidSelect.innerHTML = `<option value="" disabled>Loading error</option>`;
       }
     }
 
@@ -164,7 +164,7 @@
       const vmid = vmidSelect.value;
       const vmNode = vmidSelect.selectedOptions[0]?.dataset?.node || '';
 
-      if (!await showConfirm(`Êtes-vous sûr de vouloir supprimer la VM avec VMID ${vmid} ?`)) {
+      if (!await showConfirm(`Are you sure you want to delete VM with VMID ${vmid}?`)) {
         return; // Annuler la suppression si l'utilisateur clique sur "Annuler"
       }
   
@@ -198,7 +198,7 @@
         }
       } catch (error) {
         console.error('Erreur lors du décodage du cookie userCredentials :', error);
-        showToast('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.', 'error');
+        showToast('Authentication cookie error. Please log in again.', 'error');
         window.location.href = '/login';
         return; // Arrêter l'exécution si le cookie est invalide
       }

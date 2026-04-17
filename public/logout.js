@@ -4,7 +4,7 @@ document.getElementById('logout').addEventListener('click', async () => {
     sessionStorage.clear();
     window.location.href = '/';
   } catch (error) {
-    console.error('Erreur lors de la déconnexion :', error);
+    console.error('Logout error:', error);
   }
 });
 
@@ -20,7 +20,7 @@ document.getElementById('logout').addEventListener('click', async () => {
   if (navbar) {
     const btn = document.createElement('button');
     btn.id = 'theme-toggle';
-    btn.title = 'Changer de thème';
+    btn.title = 'Toggle theme';
     btn.textContent = getIcon(saved);
     btn.addEventListener('click', () => {
       const current = document.documentElement.getAttribute('data-theme') || 'dark';

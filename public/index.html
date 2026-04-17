@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -413,18 +413,18 @@
   <nav class="modern-navbar">
     <img src="./img/VMM.png" alt="VMM" style="width: 50px; margin-right: 5px;">
     <div class="logo">Virtual Machines Manager</div>
+    <a href="https://www.canva.com/design/DAGdy8ez_i0/8oSJ8xHat-2Lvol-OGj4XQ/view?utm_content=DAGdy8ez_i0&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hd46a505919#1" target="_blank" class="tuto-link">Tutorial</a>
     <ul class="nav-links">
-      <li><a href="">Accueil</a></li>
-      <li><a href="https://www.canva.com/design/DAGdy8ez_i0/8oSJ8xHat-2Lvol-OGj4XQ/view?utm_content=DAGdy8ez_i0&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hd46a505919#1" target="_blank">Tuto</a></li>
-      <li><a href="/clone-vm">Cloner VM</a></li>
-      <li><a href="/new-vm">Nouvelle VM</a></li>
-      <li><a href="/del-vm">Supprimer VM</a></li>
-      <li><a href="#" id="logout">Se déconnecter</a></li>
+      <li><a href="">Home</a></li>
+      <li><a href="/clone-vm">Clone VM</a></li>
+      <li><a href="/new-vm">New VM</a></li>
+      <li><a href="/del-vm">Delete VM</a></li>
+      <li><a href="#" id="logout">Log out</a></li>
     </ul>
   </nav>
 
   <div class="welcome">
-    <h1 id="welcome-user">Bienvenue dans votre tableau de bord</h1>
+    <h1 id="welcome-user">Welcome to your dashboard</h1>
   </div>
 
   <div class="node-bar" id="nodeBar"><span class="node-bar-label">Node :</span></div>
@@ -500,7 +500,7 @@
         if (!username || !password) throw new Error('Identifiant ou mot de passe manquant');
       } catch (error) {
         console.error('Erreur lors du décodage du cookie userCredentials :', error);
-        showToast('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.', 'error');
+        showToast('Authentication cookie error. Please log in again.', 'error');
         window.location.href = '/login';
         return;
       }
@@ -595,7 +595,7 @@
           }
         } catch (error) {
           console.error('Erreur lors de la vérification des permissions :', error);
-          showToast('Impossible de vérifier les permissions de l\'utilisateur. Veuillez réessayer.', 'error');
+          showToast('Unable to verify user permissions. Please try again.', 'error');
         }
       }
 
@@ -642,7 +642,7 @@
                 if (dot)   dot.className = `status-dot ${running ? 'running' : 'stopped'}`;
                 if (label) {
                   label.style.color = running ? 'var(--success)' : 'var(--danger)';
-                  label.textContent  = running ? 'Démarrée' : 'Arrêtée';
+                  label.textContent  = running ? 'Running' : 'Stopped';
                 }
               }
               // Mise à jour des barres d'utilisation
@@ -686,7 +686,7 @@
               <p class="vm-state state">
                 <span class="status-dot ${vm.status === 'running' ? 'running' : 'stopped'}"></span>
                 <strong class="vm-state-label" style="color:${vm.status === 'running' ? 'var(--success)' : 'var(--danger)'}">
-                  ${vm.status === 'running' ? 'Démarrée' : 'Arrêtée'}
+                  ${vm.status === 'running' ? 'Running' : 'Stopped'}
                 </strong>
               </p>
             `;
@@ -695,17 +695,17 @@
             ? ''
             : `
               <div class="actions">
-                <button class="button button0" onclick="openVmSettings(${vm.vmid}, '${vm.node}')" title="Paramètres">
+                <button class="button button0" onclick="openVmSettings(${vm.vmid}, '${vm.node}')" title="Settings">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.92c.04-.34.07-.68.07-1.08s-.03-.73-.07-1.08l2.32-1.8c.21-.16.27-.45.14-.68l-2.2-3.82c-.13-.23-.42-.3-.65-.22l-2.73 1.1c-.57-.44-1.18-.8-1.85-1.07L14.14 2h-4.28l-.41 2.93c-.67.27-1.28.63-1.85 1.07l-2.73-1.1c-.23-.08-.52 0-.65.22l-2.2 3.82c-.13.23-.07.52.14.68l2.32 1.8c-.04.35-.07.7-.07 1.08s.03.73.07 1.08l-2.32 1.8c-.21.16-.27.45-.14.68l2.2 3.82c.13.23.42.3.65.22l2.73-1.1c.57.44 1.18.8 1.85 1.07l.41 2.93h4.28l.41-2.93c.67-.27 1.28-.63 1.85-1.07l2.73 1.1c.23.08.52 0 .65-.22l2.2-3.82c.13-.23.07-.52-.14-.68l-2.32-1.8z"/></svg>
                 </button>
                 <button class="button button1" onclick="startVM(${vm.vmid}, '${vm.node}')">
-                  <img src="./img/start.png" alt="Démarrer">
+                  <img src="./img/start.png" alt="Start">
                 </button>
                 <button class="button button2" onclick="stopVM(${vm.vmid}, '${vm.node}')">
-                  <img src="./img/stop.png" alt="Arrêter">
+                  <img src="./img/stop.png" alt="Stop">
                 </button>
                 <a target="_blank" href="https://${window.location.hostname}:8006/?console=kvm&novnc=1&vmid=${vm.vmid}&vmname=${vm.name}&node=${vm.node}&resize=off&cmd=" class="button3">
-                  <img src="./img/screen.png" alt="écran">
+                  <img src="./img/screen.png" alt="Console">
                 </a>
               </div>
             `;
@@ -764,7 +764,7 @@
 
       } catch (error) {
           console.error('Erreur lors de la récupération des VMs :', error);
-          showToast('Une erreur est survenue lors de la récupération des machines virtuelles. Veuillez réessayer.', 'error');
+          showToast('An error occurred while fetching virtual machines. Please try again.', 'error');
       }
     }
 
@@ -804,12 +804,12 @@
         // Retirer le suffixe (@pve ou @pam) du nom d'utilisateur
         username = username.split('@')[0];
 
-        // Mettre à jour le message de bienvenue avec le pseudo
+        // Update welcome message with username
         const welcomeElement = document.getElementById('welcome-user');
-        welcomeElement.innerHTML = `Bienvenue dans votre tableau de bord <span style="color: #328bd4;">${username}</span> !`;
+        welcomeElement.innerHTML = `Welcome to your dashboard, <span style="color: #328bd4;">${username}</span>!`;
       } catch (error) {
         console.error('Erreur lors du décodage du cookie userCredentials :', error);
-        showToast('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.', 'error');
+        showToast('Authentication cookie error. Please log in again.', 'error');
         window.location.href = '/login';
       }
     });
@@ -837,7 +837,7 @@
         }
       } catch (error) {
         console.error('Erreur lors du décodage du cookie userCredentials :', error);
-        showToast('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.', 'error');
+        showToast('Authentication cookie error. Please log in again.', 'error');
         window.location.href = '/login';
         return; // Arrêter l'exécution si le cookie est invalide
       }
@@ -853,8 +853,8 @@
           throw new Error(`Erreur HTTP ${response.status} : ${response.statusText}`);
         }
 
-        showToast(`VM ${vmid} démarrée.`, 'success');
-        fetchVMs(); // Rafraîchir la liste des VMs
+        showToast(`VM ${vmid} started.`, 'success');
+        fetchVMs(); // Refresh VM list
       } catch (error) {
         console.error(`Erreur lors du démarrage de la VM ${vmid}:`, error);
       }
@@ -883,7 +883,7 @@
         }
       } catch (error) {
         console.error('Erreur lors du décodage du cookie userCredentials :', error);
-        showToast('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.', 'error');
+        showToast('Authentication cookie error. Please log in again.', 'error');
         window.location.href = '/login';
         return; // Arrêter l'exécution si le cookie est invalide
       }
@@ -899,8 +899,8 @@
           throw new Error(`Erreur HTTP ${response.status} : ${response.statusText}`);
         }
 
-        showToast(`VM ${vmid} arrêtée.`, 'success');
-        fetchVMs(); // Rafraîchir la liste des VMs
+        showToast(`VM ${vmid} stopped.`, 'success');
+        fetchVMs(); // Refresh VM list
       } catch (error) {
         console.error(`Erreur lors de l'arrêt de la VM ${vmid}:`, error);
       }
@@ -961,7 +961,7 @@
           document.getElementById(`snet${i}-bridge`).disabled = !on;
         }
       } catch(e) {
-        showToast('Erreur lors du chargement de la configuration.', 'error');
+        showToast('Failed to load configuration.', 'error');
         closeVmSettings();
       }
     }
@@ -1002,13 +1002,13 @@
           body: JSON.stringify(updates),
         });
         if (r.ok) {
-          showToast('Configuration mise à jour avec succès !', 'success');
+          showToast('Configuration updated successfully!', 'success');
           closeVmSettings();
         } else {
-          showToast(`Erreur : ${await r.text()}`, 'error');
+          showToast(`Error: ${await r.text()}`, 'error');
         }
       } catch(e) {
-        showToast('Erreur lors de la sauvegarde.', 'error');
+        showToast('Failed to save configuration.', 'error');
       }
     }
   </script>
@@ -1022,17 +1022,17 @@
       </div>
       <div class="vm-settings-body">
         <div class="settings-section">
-          <p class="settings-section-title">Mémoire</p>
+          <p class="settings-section-title">Memory</p>
           <div class="form-group">
             <label for="sMemory">RAM (MiB)</label>
             <input type="number" id="sMemory" min="256" step="256">
           </div>
         </div>
         <div class="settings-section">
-          <p class="settings-section-title">Processeur</p>
+          <p class="settings-section-title">CPU</p>
           <div class="settings-row">
             <div class="form-group">
-              <label for="sCores">Coeurs</label>
+              <label for="sCores">Cores</label>
               <input type="number" id="sCores" min="1" max="128">
             </div>
             <div class="form-group">
@@ -1042,7 +1042,7 @@
           </div>
         </div>
         <div class="settings-section">
-          <p class="settings-section-title">Système</p>
+          <p class="settings-section-title">System</p>
           <div class="settings-row">
             <div class="form-group">
               <label for="sBios">BIOS</label>
@@ -1052,7 +1052,7 @@
               </select>
             </div>
             <div class="form-group">
-              <label for="sScsiHw">Contrôleur SCSI</label>
+              <label for="sScsiHw">SCSI Controller</label>
               <select id="sScsiHw">
                 <option value="lsi">LSI 53C895A</option>
                 <option value="lsi53c810">LSI 53C810</option>
@@ -1065,7 +1065,7 @@
           </div>
         </div>
         <div class="settings-section">
-          <p class="settings-section-title">Cartes réseau</p>
+          <p class="settings-section-title">Network Cards</p>
           <div style="display:flex;flex-direction:column;gap:8px">
             <div class="settings-net-row">
               <span class="settings-net-label">net0</span>
@@ -1095,8 +1095,8 @@
         </div>
       </div>
       <div class="vm-settings-footer">
-        <button class="confirm-btn cancel" onclick="closeVmSettings()">Annuler</button>
-        <button class="confirm-btn primary" onclick="saveVmSettings()">Enregistrer</button>
+        <button class="confirm-btn cancel" onclick="closeVmSettings()">Cancel</button>
+        <button class="confirm-btn primary" onclick="saveVmSettings()">Save</button>
       </div>
     </div>
   </div>

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cloner une VM</title>
+  <title>Clone a VM</title>
   <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.12.0/css/all.css">
   <link rel="icon" type="image/x-icon" href="./VMM.ico">
   <script>(function(){var t=localStorage.getItem('vmm-theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
@@ -67,36 +67,36 @@
     <nav class="modern-navbar">
         <img src="./img/VMM.png" alt="VMM" style="width: 50px; margin-right: 5px;">
         <div class="logo">Virtual Machines Manager</div>
+        <a href="https://www.canva.com/design/DAGdy8ez_i0/8oSJ8xHat-2Lvol-OGj4XQ/view?utm_content=DAGdy8ez_i0&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hd46a505919#1" target="_blank" class="tuto-link">Tutorial</a>
         <ul class="nav-links">
-          <li><a href="/dashboard">Accueil</a></li>
-          <li><a href="https://www.canva.com/design/DAGdy8ez_i0/8oSJ8xHat-2Lvol-OGj4XQ/view?utm_content=DAGdy8ez_i0&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hd46a505919#1" target="_blank">Tuto</a></li>
-          <li><a href="/clone-vm">Cloner VM</a></li>
-          <li><a href="/new-vm">Nouvelle VM</a></li>
-          <li><a href="/del-vm">Supprimer VM</a></li>
-          <li><a href="#" id="logout">Se déconnecter</a></li>
+          <li><a href="/dashboard">Home</a></li>
+          <li><a href="/clone-vm">Clone VM</a></li>
+          <li><a href="/new-vm">New VM</a></li>
+          <li><a href="/del-vm">Delete VM</a></li>
+          <li><a href="#" id="logout">Log out</a></li>
         </ul>
     </nav>
 
     <div class="clonediv">
         <div class="container">
-            <h1>Cloner une VM</h1>
+            <h1>Clone a VM</h1>
             <form id="cloneVmForm">
               <div class="form-group">
-                <label for="sourceVmid">ID de la VM source :</label>
+                <label for="sourceVmid">Source VM ID:</label>
                 <select id="sourceVmid" required>
-                  <option value="" disabled selected>Chargement des VMs...</option>
+                  <option value="" disabled selected>Loading VMs...</option>
                 </select>
               </div>
               <div class="form-group">
-                <label for="newVmid">Nouvel ID de la VM clonée :</label>
-                <input type="number" id="newVmid" placeholder="Chargement..." disabled required>
+                <label for="newVmid">New VM ID:</label>
+                <input type="number" id="newVmid" placeholder="Loading..." disabled required>
               </div>
               <div class="form-group">
-                <label for="newVmName">Nom de la VM clonée :</label>
-                <input type="text" id="newVmName" placeholder="Entrez le nom de la nouvelle VM" required>
+                <label for="newVmName">Name of the cloned VM:</label>
+                <input type="text" id="newVmName" placeholder="Enter the new VM name" required>
               </div>
 
-              <button type="submit">Cloner</button>
+              <button type="submit">Clone</button>
             </form>
             <div id="result" class="error-message"></div>
         </div>
@@ -124,7 +124,7 @@
             if (!username || !password) throw new Error('Identifiant ou mot de passe manquant');
         } catch (error) {
             console.error('Erreur lors du décodage du cookie userCredentials :', error);
-            showToast('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.', 'error');
+            showToast('Authentication cookie error. Please log in again.', 'error');
             window.location.href = '/login';
             return;
         }
@@ -141,7 +141,7 @@
                 const templates = vms.filter(vm => vm.tags && vm.tags.includes('template'));
 
                 if (templates.length === 0) {
-                    sourceVmidSelect.innerHTML = `<option value="" disabled>Aucune VM avec le tag "template"</option>`;
+                    sourceVmidSelect.innerHTML = `<option value="" disabled>No VM with the tag "template"</option>`;
                     return;
                 }
 
@@ -151,7 +151,7 @@
                     .join('');
             } catch (error) {
                 console.error('Erreur lors de la récupération des VMs avec le tag "template" :', error);
-                sourceVmidSelect.innerHTML = `<option value="" disabled>Erreur lors du chargement</option>`;
+                sourceVmidSelect.innerHTML = `<option value="" disabled>Loading error</option>`;
             }
         }
 
@@ -169,7 +169,7 @@
                 newVmidInput.disabled = false;
             } catch (error) {
                 console.error('Error fetching VMID:', error);
-                newVmidInput.placeholder = 'Erreur lors du chargement';
+                newVmidInput.placeholder = 'Loading error';
             }
         }
 
@@ -195,17 +195,17 @@
                 if (response.ok) {
                     const data = await response.json();
                     resultElement.className = 'success-message';
-                    resultElement.textContent = `VM clonée avec succès : ${data.message}`;
+                    resultElement.textContent = `VM cloned successfully: ${data.message}`;
                     window.location.href = '/dashboard';
                 } else {
                     const error = await response.json();
                     resultElement.className = 'error-message';
-                    resultElement.textContent = `Erreur : ${error.message}`;
+                    resultElement.textContent = `Error: ${error.message}`;
                 }
             } catch (error) {
                 console.error('Erreur lors du clonage de la VM :', error);
                 document.getElementById('result').className = 'error-message';
-                document.getElementById('result').textContent = 'Une erreur est survenue lors du clonage de la VM.';
+                document.getElementById('result').textContent = 'An error occurred while cloning the VM.';
             }
         });
     });

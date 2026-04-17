@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Créer une nouvelle machine virtuelle</title>
+  <title>Create a new virtual machine</title>
   <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.12.0/css/all.css">
   <link rel="icon" type="image/x-icon" href="./VMM.ico">
   <script>(function(){var t=localStorage.getItem('vmm-theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
@@ -85,30 +85,30 @@
     <nav class="modern-navbar">
         <img src="./img/VMM.png" alt="VMM" style="width: 50px; margin-right: 5px;">
         <div class="logo">Virtual Machines Manager</div>
+        <a href="https://www.canva.com/design/DAGdy8ez_i0/8oSJ8xHat-2Lvol-OGj4XQ/view?utm_content=DAGdy8ez_i0&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hd46a505919#1" target="_blank" class="tuto-link">Tutorial</a>
         <ul class="nav-links">
-            <li><a href="/dashboard">Accueil</a></li>
-            <li><a href="https://www.canva.com/design/DAGdy8ez_i0/8oSJ8xHat-2Lvol-OGj4XQ/view?utm_content=DAGdy8ez_i0&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=hd46a505919#1" target="_blank">Tuto</a></li>
-            <li><a href="/clone-vm">Cloner VM</a></li>
-            <li><a href="/new-vm">Nouvelle VM</a></li>
-            <li><a href="/del-vm">Supprimer VM</a></li>
-            <li><a href="#" id="logout">Se déconnecter</a></li>
+            <li><a href="/dashboard">Home</a></li>
+            <li><a href="/clone-vm">Clone VM</a></li>
+            <li><a href="/new-vm">New VM</a></li>
+            <li><a href="/del-vm">Delete VM</a></li>
+            <li><a href="#" id="logout">Log out</a></li>
         </ul>
     </nav>
     
     <div class="welcome">
-        <h1 id="welcome-user">Créer une nouvelle Machine Virtuelle</h1>
+        <h1 id="welcome-user">Create a new Virtual Machine</h1>
     </div>
 
     <div class="node-bar" id="nodeBar"><span class="node-bar-label">Node :</span></div>
 
   <div class="container">
     <div class="tabs">
-      <div class="tab active" data-target="general">Général</div>
+      <div class="tab active" data-target="general">General</div>
       <div class="tab" data-target="os">OS</div>
-      <div class="tab" data-target="disks">Disque</div>
+      <div class="tab" data-target="disks">Disk</div>
       <div class="tab" data-target="cpu1">CPU</div>
       <div class="tab" data-target="memory">RAM</div>
-      <div class="tab" data-target="confirm">Confirmer</div>
+      <div class="tab" data-target="confirm">Confirm</div>
     </div>
 
     <form id="createVmForm">
@@ -119,7 +119,7 @@
           <input type="number" id="vmid" name="vmid" required>
         </div>
         <div class="form-group">
-          <label for="name">Nom:</label>
+          <label for="name">Name:</label>
           <input type="text" id="name" name="name" required>
         </div>
         <div class="form-group">
@@ -141,15 +141,15 @@
       <!-- Disks -->
       <div class="tab-content" id="disks">
         <div class="form-group">
-          <label for="storage">Stockage :</label>
+          <label for="storage">Storage:</label>
           <select id="storage" name="storage" required>
-            <option value="">Chargement des stockages...</option>
+            <option value="">Loading storages...</option>
           </select>
           <small id="storage-info" style="display:block;margin-top:6px;color:#555;"></small>
         </div>
 
         <div class="form-group">
-          <label for="disk-size">Taille du Disque (GiB) :</label>
+          <label for="disk-size">Disk size (GiB):</label>
           <input type="number" id="disk-size" name="diskSize" required min="1">
           <small id="disk-hint" style="display:block;margin-top:6px;color:#777;"></small>
         </div>
@@ -162,7 +162,7 @@
           <input type="number" id="sockets" name="sockets" required>
         </div>
         <div class="form-group">
-          <label for="cores">Coeurs:</label>
+          <label for="cores">Cores:</label>
           <input type="number" id="cores" name="cores" required>
         </div>
       </div>
@@ -177,8 +177,8 @@
 
       <!-- Confirm -->
       <div class="tab-content" id="confirm">
-        <h3>Créer votre nouvelle Machine Virtuelle</h3>
-        <button type="submit" class="button">Créer</button>
+        <h3>Create your new Virtual Machine</h3>
+        <button type="submit" class="button">Create</button>
       </div>
     </form>
   </div>
@@ -218,7 +218,7 @@
             if (!username || !password) throw new Error('Identifiant ou mot de passe manquant');
         } catch (error) {
             console.error('Erreur lors du décodage du cookie userCredentials :', error);
-            showToast('Erreur avec le cookie d\'authentification. Veuillez vous reconnecter.', 'error');
+            showToast('Authentication cookie error. Please log in again.', 'error');
             window.location.href = '/login';
             return;
         }
@@ -235,7 +235,7 @@
                     .join('');
             } catch (error) {
                 console.error('Error fetching ISO images:', error);
-                isoImageSelect.innerHTML = '<option value="">Erreur lors du chargement des ISO</option>';
+                isoImageSelect.innerHTML = '<option value="">Error loading ISO images</option>';
             }
         }
 
@@ -265,8 +265,8 @@
             const storages = await resp.json();
 
             if (!storages.length) {
-              storageSelect.innerHTML = '<option value="">Aucun stockage compatible</option>';
-              infoEl.textContent = 'Aucun storage acceptant des disques VM (content: images).';
+              storageSelect.innerHTML = '<option value="">No compatible storage found</option>';
+              infoEl.textContent = 'No storage accepting VM disks (content: images).';
               return;
             }
 
@@ -282,13 +282,13 @@
               const opt = storageSelect.selectedOptions[0];
               const avail = parseFloat(opt?.dataset?.avail || 'NaN');
               if (!isNaN(avail)) {
-                infoEl.textContent = `Espace libre estimé : ${avail} GiB`;
-                // aide à l’input
+                infoEl.textContent = `Estimated free space: ${avail} GiB`;
+                // input hint
                 const diskInput = document.getElementById('disk-size');
-                diskInput.max = Math.floor(avail); // limite hard HTML
-                diskHint.textContent = `Max recommandé : ${Math.floor(avail)} GiB (selon espace libre).`;
+                diskInput.max = Math.floor(avail); // HTML hard limit
+                diskHint.textContent = `Recommended max: ${Math.floor(avail)} GiB (based on free space).`;
               } else {
-                infoEl.textContent = 'Espace libre indisponible pour ce storage.';
+                infoEl.textContent = 'Free space unavailable for this storage.';
                 diskHint.textContent = '';
               }
             };
@@ -297,7 +297,7 @@
             updateInfo();
           } catch (e) {
             console.error('Error fetching storages:', e);
-            storageSelect.innerHTML = '<option value="">Erreur lors du chargement des storages</option>';
+            storageSelect.innerHTML = '<option value="">Error loading storages</option>';
           }
         }
 
@@ -307,7 +307,7 @@
           const opt = storageSelect.selectedOptions[0];
           const avail = parseFloat(opt?.dataset?.avail || 'NaN');
           if (!isNaN(avail) && parseFloat(diskInput.value) > avail) {
-            showToast(`La taille du disque dépasse l'espace libre (${avail} GiB).`, 'warning');
+            showToast(`Disk size exceeds free space (${avail} GiB).`, 'warning');
             diskInput.value = Math.floor(avail);
           }
         }
@@ -372,16 +372,16 @@
                 });
 
                 if (response.ok) {
-                    showToast('VM créée avec succès !', 'success');
+                    showToast('VM created successfully!', 'success');
                     const result = await response.json();
                     window.location.href = '/dashboard';
                 } else {
                     const errorText = await response.text();
-                    showToast(`Erreur lors de la création de la VM : ${errorText}`, 'error');
+                    showToast(`Error creating VM: ${errorText}`, 'error');
                 }
             } catch (error) {
                 console.error('Erreur :', error);
-                showToast('Une erreur est survenue lors de la création de la VM.', 'error');
+                showToast('An error occurred while creating the VM.', 'error');
             }
         });
     });
