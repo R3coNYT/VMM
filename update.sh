@@ -118,6 +118,7 @@ if [ -n "$CHANGED" ]; then
         warn "Update cancelled."
         exit 0
     fi
+    git reset --hard HEAD
 fi
 
 # ── Applying the update ─────────────────────────────────────────────────────
