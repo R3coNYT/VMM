@@ -127,24 +127,31 @@
             sessionStorage.setItem('token', result.ticket);
             document.cookie = `credentials=${btoa(`${userWithRealm}:${password}`)}; Secure; HttpOnly; SameSite=Strict; max-age=86400; path=/`;
             window.location.href = '/dashboard';
+            return true;
           } else {
             throw new Error(result.message);
           }
         } catch (error) {
-          return false; // Retourne false si l'authentification échoue
+          return false;
         }
       };
 
-      // Essayer avec @pam d'abord, puis avec @pve si échec
-      const loginWithPam = await tryLogin(`${username}@pam`);
-      if (!loginWithPam) {
-        const loginWithPve = await tryLogin(`${username}@pve`);
-        if (!loginWithPve) {
-          const loginWithLdaps = await tryLogin(`${username}@LDAPS-FlavProx`);
-          if (!loginWithLdaps) {
-            document.getElementById('result').innerText = 'Error: Invalid credentials.';
-          }
-        }
+      // Récupérer les realms depuis le serveur puis essayer chacun
+      let realms;
+      try {
+        const r = await fetch('/realms');
+        realms = r.ok ? await r.json() : ['pam', 'pve'];
+      } catch {
+        realms = ['pam', 'pve'];
+      }
+
+      let success = false;
+      for (const realm of realms) {
+        const ok = await tryLogin(`${username}@${realm}`);
+        if (ok !== false) { success = true; break; }
+      }
+      if (!success) {
+        document.getElementById('result').innerText = 'Error: Invalid credentials.';
       }
     });
   </script>

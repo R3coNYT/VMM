@@ -87,6 +87,21 @@ app.get('/iso', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'iso.html'));
 });
 
+// Proxmox /access/domains is public — no auth needed
+app.get('/realms', async (req, res) => {
+  try {
+    const response = await axios.get(
+      `https://${IP}:8006/api2/json/access/domains`,
+      { httpsAgent }
+    );
+    const realms = response.data.data.map(d => d.realm);
+    res.json(realms);
+  } catch (error) {
+    console.error('Erreur récupération realms :', error.message);
+    res.status(500).json({ message: 'Impossible de récupérer les realms.' });
+  }
+});
+
 app.post('/authenticate', async (req, res) => {
   const { username, password } = req.body;
 
