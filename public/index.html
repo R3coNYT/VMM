@@ -18,11 +18,12 @@
     }
 
     .column1 {
-      width: 300px;
+      width: 360px;
       flex-shrink: 0;
       display: flex;
       flex-direction: column;
       gap: 14px;
+      overflow: hidden;
     }
 
     .column1 h1, .column2 h1 {
@@ -51,15 +52,14 @@
     }
 
     .othervms {
-      display: flex;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
       gap: 18px;
     }
 
-    /* ── VM Cards ── */
-    .card {
+    /* ── VM Cards (base partagée) ── */
+    .card, .card2 {
       position: relative;
-      width: 340px;
       border: 1px solid var(--border);
       border-radius: var(--radius);
       background: var(--surface-card);
@@ -73,7 +73,13 @@
       animation: fadeSlideUp 0.4s var(--ease) both;
     }
 
-    .card::after {
+    /* VM cards — taille contrôlée par la grille */
+    .card { width: 100%; }
+
+    /* Template cards */
+    .card2 { width: 360px; }
+
+    .card::after, .card2::after {
       content: '';
       position: absolute;
       top: 0; left: 0; right: 0;
@@ -84,15 +90,15 @@
       transition: opacity var(--transition);
     }
 
-    .card:hover {
+    .card:hover, .card2:hover {
       transform: translateY(-4px);
       border-color: var(--border-hover);
       box-shadow: 0 24px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(99,102,241,0.2);
     }
 
-    .card:hover::after { opacity: 1; }
+    .card:hover::after, .card2:hover::after { opacity: 1; }
 
-    .card p { margin: 0; }
+    .card p, .card2 p { margin: 0; }
 
     #vmName {
       text-align: center;
@@ -155,10 +161,10 @@
       color: #c4b5fd;
     }
 
-    .card .small { font-size: 0.85em; color: var(--text); font-weight: 500; }
+    .card .small, .card2 .small { font-size: 0.85em; color: var(--text); font-weight: 500; }
 
     /* ── Card inner wrapper fills height so buttons stay at the bottom ── */
-    .card > div {
+    .card > div, .card2 > div {
       display: flex;
       flex-direction: column;
       flex: 1;
@@ -620,7 +626,7 @@
 
         // Carte existantes indexées par vmid
         const existingCards = {};
-        document.querySelectorAll('.card[data-vmid]').forEach(c => {
+        document.querySelectorAll('.card[data-vmid], .card2[data-vmid]').forEach(c => {
           existingCards[c.dataset.vmid] = c;
         });
         const seenVmids = new Set();
@@ -671,7 +677,7 @@
 
           // Nouvelle carte → on la crée avec animation
           const card = document.createElement('div');
-          card.classList.add('card');
+          card.classList.add(isTemplate ? 'card2' : 'card');
           card.dataset.vmid = vmidStr;
 
           const tagsHTML = vm.tags
