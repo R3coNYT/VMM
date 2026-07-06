@@ -178,9 +178,9 @@
                 const response = await fetch(`/all-vms?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`);
                 if (!response.ok) throw new Error('Erreur lors de la récupération des VMs.');
                 const vms = await response.json();
-                allTemplates = vms.filter(vm => vm.tags && vm.tags.includes('template'));
+                allTemplates = vms.filter(vm => vm.template === 1);
                 if (allTemplates.length === 0) {
-                    sourceVmidSelect.innerHTML = `<option value="" disabled>No VM with the tag "template"</option>`;
+                    sourceVmidSelect.innerHTML = `<option value="" disabled>No templates found</option>`;
                     return;
                 }
                 renderTemplateSelect(null);

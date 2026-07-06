@@ -524,6 +524,7 @@ app.get('/all-vms', async (req, res) => {
               maxdisk: (vm.maxdisk / 1024 / 1024 / 1024).toFixed(2),
               status: vm.status,
               tags: vm.tags,
+              template: vm.template || 0,
           }));
 
       res.json(vms);
